@@ -15,23 +15,32 @@ public class RegistryServlet extends HttpServlet {
      */
     private static final long serialVersionUID = 8419855038481651498L;
 
+    private RequestResponseHandler requestResponseHandler;
     
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html");
+        
+        
         PrintWriter out = response.getWriter();
 
         out.println("<HTML><HEAD><TITLE>");
         out.println("Request info");
         out.println("</TITLE></HEAD>");
-        out.println("<body>hi there</body></HTML>");
+        out.println("<body>"+request.getRequestURI()+"</body></HTML>");
         out.close();
     }
     
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // TODO Auto-generated method stub
-        super.doPost(req, resp);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
     }
-    
+
+    public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
+        this.requestResponseHandler = requestResponseHandler;
+    }
+
+    public RequestResponseHandler getRequestResponseHandler() {
+        return requestResponseHandler;
+    }
 }
