@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 
 import net.mindengine.jeremy.exceptions.DeserializationException;
+import net.mindengine.jeremy.exceptions.SerializationException;
 
 
 /**
@@ -26,6 +27,7 @@ public interface RequestResponseHandler {
      * Serializes object to string
      * @param object
      * @return
+     * @throws SerializationException 
      */
-    public String serializeResponse(Object object); 
+    public String serializeResponse(Object object) throws SerializationException; 
 }

@@ -9,8 +9,11 @@ import java.lang.reflect.Method;
 import javax.servlet.http.HttpServletRequest;
 
 import net.mindengine.jeremy.exceptions.DeserializationException;
+import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class DefaultJsonRequestResponseHandler implements RequestResponseHandler {
@@ -25,21 +28,26 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
         is.close();
         return sb.toString();
     }
+    
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public Object[] getObjects(Method method, HttpServletRequest request) throws DeserializationException {
         try {
-            ObjectMapper mapper = new ObjectMapper();
             Class<?>[]types = method.getParameterTypes();
             if(types!=null && types.length>0) {
-                String requestBody = convertStreamToString(request.getInputStream());
                 
+                Object[] objects = new Object[types.length];
                 
-                Object[]objects = mapper.readValue(requestBody, Object[].class);
-                
-                //Converting all deserialized object to the type of corresponding method argument
-                if(objects==null || objects.length!=types.length) {
-                    throw new DeserializationException("Argument size is not the same as in "+method.toGenericString());
+                for(int i=0;i<types.length; i++) {
+                    String argumentString = request.getParameter("arg"+i);
+                    //In case if argument http parameter wasn't specified it should be treated as null
+                    if(argumentString == null) {
+                        objects[i] = null;
+                    }
+                    else {
+                        objects[i] = mapper.readValue(argumentString, types[i]);
+                    }
                 }
                 return objects;
             }
@@ -52,9 +60,12 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
     
 
     @Override
-    public String serializeResponse(Object object) {
-        // TODO Auto-generated method stub
-        return null;
+    public String serializeResponse(Object object) throws SerializationException {
+        try {
+            return mapper.writeValueAsString(object);
+        } catch (Exception e) {
+            throw new SerializationException(e);
+        }
     }
 
 }

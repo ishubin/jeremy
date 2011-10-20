@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -18,9 +19,18 @@ import javax.servlet.http.HttpSession;
 public class HttpRequestMock implements HttpServletRequest{
 
     private String requestBody;
+    private Map<String, String> parameters = new HashMap<String, String>();
+    
+    public HttpRequestMock() {
+        
+    }
     
     public HttpRequestMock(String requestBody) {
         this.requestBody = requestBody;
+    }
+    
+    public void putParameter(String name, String value) {
+        parameters.put(name, value);
     }
 
     @Override
@@ -74,8 +84,7 @@ public class HttpRequestMock implements HttpServletRequest{
 
     @Override
     public String getParameter(String name) {
-        
-        return null;
+        return this.parameters.get(name);
     }
 
     @Override
