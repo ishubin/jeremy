@@ -29,8 +29,7 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
         return sb.toString();
     }
     
-    private ObjectMapper mapper = new ObjectMapper();
-
+    
     @Override
     public Object[] getObjects(Method method, HttpServletRequest request) throws DeserializationException {
         try {
@@ -46,6 +45,7 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
                         objects[i] = null;
                     }
                     else {
+                        ObjectMapper mapper = new ObjectMapper();
                         objects[i] = mapper.readValue(argumentString, types[i]);
                     }
                 }
@@ -62,6 +62,7 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
     @Override
     public String serializeResponse(Object object) throws SerializationException {
         try {
+            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(object);
         } catch (Exception e) {
             throw new SerializationException(e);

@@ -22,7 +22,7 @@ import org.junit.Test;
 public class RequestResponseHandlerUnitTest {
 
     
-    public Long sampleMethod(String arg1, Integer arg2, Integer[]args) {
+    public Long sampleMethod(String arg1, Integer arg2, Integer[]arg3) {
         return 123L;
     }
     
