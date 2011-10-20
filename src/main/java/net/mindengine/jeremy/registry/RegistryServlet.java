@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.mindengine.jeremy.messaging.RequestResponseHandler;
+
 
 public class RegistryServlet extends HttpServlet {
 

@@ -1,7 +1,9 @@
-package net.mindengine.jeremy.registry;
+package net.mindengine.jeremy.messaging;
 import java.lang.reflect.Method;
 
 import javax.servlet.http.HttpServletRequest;
+
+import net.mindengine.jeremy.exceptions.DeserializationException;
 
 
 /**
@@ -16,8 +18,9 @@ public interface RequestResponseHandler {
      * @param method
      * @param request
      * @return
+     * @throws DeserializationException 
      */
-    public Object[] getObjects(Method method, HttpServletRequest request);
+    public Object[] getObjects(Method method, HttpServletRequest request) throws DeserializationException;
     
     /**
      * Serializes object to string
