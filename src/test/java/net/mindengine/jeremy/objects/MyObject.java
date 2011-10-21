@@ -1,9 +1,11 @@
 package net.mindengine.jeremy.objects;
 
+
 public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
 
     private Long id = 1L;
     private String name = "name";
+    
     
     @Override
     public Long getId() {
@@ -24,5 +26,6 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
     public void setName(String name) {
         this.name = name;
     }
+
 
 }
