@@ -38,7 +38,7 @@ public class HttpRequestMock implements HttpServletRequest{
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings("unchecked")
     @Override
     public Enumeration getAttributeNames() {
         return null;
@@ -87,6 +87,7 @@ public class HttpRequestMock implements HttpServletRequest{
         return this.parameters.get(name);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Enumeration getParameterNames() {
         
@@ -99,6 +100,7 @@ public class HttpRequestMock implements HttpServletRequest{
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map getParameterMap() {
         
@@ -165,6 +167,7 @@ public class HttpRequestMock implements HttpServletRequest{
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Enumeration getLocales() {
         
@@ -237,12 +240,14 @@ public class HttpRequestMock implements HttpServletRequest{
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Enumeration getHeaders(String name) {
         
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Enumeration getHeaderNames() {
         
