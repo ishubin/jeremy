@@ -5,6 +5,17 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
 
     private Long id = 1L;
     private String name = "name";
+    private SerialObject serialObject;
+    
+    @Override
+    public SerialObject getSerialObject() {
+        return serialObject;
+    }
+    
+    @Override
+    public void setSerialObject(SerialObject serialObject) {
+        this.serialObject = serialObject; 
+    }
     
     
     @Override

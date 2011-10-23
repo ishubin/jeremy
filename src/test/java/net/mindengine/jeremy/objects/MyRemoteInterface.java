@@ -7,4 +7,8 @@ public interface MyRemoteInterface extends Remote {
     public String getName();
     
     public void setName(String name);
+    
+    public SerialObject getSerialObject();
+    
+    public void setSerialObject(SerialObject serialObject);
 }
