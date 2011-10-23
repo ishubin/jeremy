@@ -72,7 +72,12 @@ public class RegistryServlet extends HttpServlet {
             String body = requestResponseHandler.serializeResponse(output);
             if(output instanceof Throwable) {
                 response.setStatus(400);
-                //TODO wrap output into exception wrapper so the client could see the classpath of thrown exception
+                Throwable error = (Throwable) output;
+                
+                RemoteExceptionWrapper remoteException = new RemoteExceptionWrapper();
+                remoteException.setType(error.getClass().getName());
+                remoteException.setError(error);
+                out.print(registry.getRequestResponseHandler().serializeResponse(remoteException));
             }
             else {
                 response.setStatus(200);
