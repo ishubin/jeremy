@@ -27,5 +27,4 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
         this.name = name;
     }
 
-
 }
