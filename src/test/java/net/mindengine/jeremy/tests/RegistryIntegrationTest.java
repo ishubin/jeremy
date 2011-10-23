@@ -1,6 +1,7 @@
 package net.mindengine.jeremy.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -53,10 +54,29 @@ public class RegistryIntegrationTest {
         
         ObjectMapper mapper = new ObjectMapper();
         String[] objects = mapper.readValue(response.getContent(), String[].class);
-        //assertEquals("[\"myObject\",\"myObject2\"]", response.getContent().trim());
         assertNotNull(objects);
+        assertEquals(2, objects.length);
         assertContains(objects, "myObject");
         assertContains(objects, "myObject2");
+        
+    }
+    
+    @Test
+    public void shouldReturnListOfAllMethodsPerObject() throws InterruptedException, KeyManagementException, NoSuchAlgorithmException, IOException {
+        Client client = new Client();
+        HttpResponse response = client.getRequest("http://localhost:8085/myObject/~", null);
+        
+        assertEquals(200, response.getStatus());
+        
+        
+        ObjectMapper mapper = new ObjectMapper();
+        String[] objects = mapper.readValue(response.getContent(), String[].class);
+        assertNotNull(objects);
+        assertEquals(4, objects.length);
+        assertContains(objects, "getName");
+        assertContains(objects, "getId");
+        assertContains(objects, "setName");
+        assertContains(objects, "setLong");
         
     }
     
@@ -78,5 +98,7 @@ public class RegistryIntegrationTest {
         str+="]";
         return str;
     }
+    
+    
     
 }

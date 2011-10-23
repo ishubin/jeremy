@@ -1,12 +1,15 @@
 package net.mindengine.jeremy.registry;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFound;
 import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
 
@@ -39,10 +42,10 @@ public class RegistryServlet extends HttpServlet {
                 //TODO
             }
             else if(uri.matches("/.*/~")) {
-              //TODO
+                output = getListOfAllRemoteMethods(uri);
             }
             else if(uri.matches("/~")) {
-              output = getListOfAllObjects();
+                output = getListOfAllObjects();
             }
         }
         else if(uri.matches("/.*/.*")) {
@@ -61,13 +64,17 @@ public class RegistryServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         try {
             String body = requestResponseHandler.serializeResponse(output);
-            response.setStatus(200);
-            out.print(body);
+            if(output instanceof Throwable) {
+                response.setStatus(400);
+                //TODO wrap output into exception wrapper so the client could see the classpath of thrown exception
+            }
+            else {
+                response.setStatus(200);
+                out.print(body);
+            }
         } catch (SerializationException e) {
             response.setStatus(422);
             out.print("\"Unprocessable Entity\"");
-            out.flush();
-            out.close();
         }
         
         out.flush();
@@ -75,6 +82,21 @@ public class RegistryServlet extends HttpServlet {
     }
     
     
+    private Object getListOfAllRemoteMethods(String uri) {
+        Pattern pattern = Pattern.compile("/(.*?)/~");
+        Matcher m = pattern.matcher(uri);
+        while (m.find()) {
+            String name = m.group(1);
+            RemoteObject object = registry.getRemoteObjects().get(name);
+            if(object!=null) {
+                 return object.getRemoteMethods().keySet();
+            }
+            return new RemoteObjectIsNotFound("There is no such remote object '"+name+"'");
+        }
+        return new IllegalArgumentException("Cannot find name of object in URL");
+    }
+
+
     public String[] getListOfAllObjects() {
         return registry.getRemoteObjects().keySet().toArray(new String[]{});
     }
