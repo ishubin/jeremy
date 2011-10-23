@@ -1,10 +1,12 @@
 package net.mindengine.jeremy.registry;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.mindengine.jeremy.Remote;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
+import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
+import net.mindengine.jeremy.objects.MyObject;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -15,7 +17,7 @@ import org.mortbay.jetty.servlet.ServletHolder;
 public class Registry {
 
     private Server server;
-    private Map<String, Object> objects = new HashMap<String, Object>();
+    private Map<String, Object> remoteObjects = new ConcurrentHashMap<String, Object>();
     private RegistryServlet servlet;
     private RequestResponseHandler requestResponseHandler;
     
@@ -30,6 +32,10 @@ public class Registry {
         Context context = new Context();
         ServletHolder holder = new ServletHolder();
         servlet = new RegistryServlet();
+        servlet.setRegistry(this);
+        if(requestResponseHandler==null) {
+            requestResponseHandler = new DefaultJsonRequestResponseHandler();
+        }
         servlet.setRequestResponseHandler(requestResponseHandler);
         holder.setServlet(servlet);
         context.addServlet(holder, "/*");
@@ -44,20 +50,15 @@ public class Registry {
         server.stop();
     }
     
-    public static void main(String[] args) throws Exception {
-        Registry registry = new Registry();
-        registry.start();
-    }
-
     public void addObject(String name, Remote remoteObject) {
         if(remoteObject==null) {
             throw new IllegalArgumentException("Cannot add null objects");
         }
-        objects.put(name, remoteObject);
+        getRemoteObjects().put(name, remoteObject);
     }
     
     public void removeObject(String name) {
-        objects.remove(name);
+        getRemoteObjects().remove(name);
     }
 
     public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
@@ -66,6 +67,14 @@ public class Registry {
 
     public RequestResponseHandler getRequestResponseHandler() {
         return requestResponseHandler;
+    }
+
+    public void setRemoteObjects(Map<String, Object> remoteObjects) {
+        this.remoteObjects = remoteObjects;
+    }
+
+    public Map<String, Object> getRemoteObjects() {
+        return remoteObjects;
     }
 
 }

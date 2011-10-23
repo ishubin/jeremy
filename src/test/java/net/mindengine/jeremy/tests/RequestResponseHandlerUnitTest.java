@@ -1,12 +1,12 @@
 package net.mindengine.jeremy.tests;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -15,18 +15,14 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import junit.framework.Assert;
-
+import net.mindengine.jeremy.cache.DefaultCache;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
 import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
-import net.mindengine.jeremy.objects.MyObject;
 import net.mindengine.jeremy.objects.SerialObject;
 import net.mindengine.jeremy.tests.mocks.HttpRequestMock;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class RequestResponseHandlerUnitTest {
@@ -72,7 +68,7 @@ public class RequestResponseHandlerUnitTest {
     }
     
     /**
-     * Just a smaple method so it could be used in unit test for testing deserialization
+     * Just a sample method so it could be used in unit test for testing deserialization
      */
     public void testMethod(SerialObject object) {
         
@@ -133,4 +129,29 @@ public class RequestResponseHandlerUnitTest {
         
     }
     
+    @Test
+    public void handlerShouldBeAbleToCacheObjects() throws SecurityException, DeserializationException, NoSuchMethodException {
+        RequestResponseHandler handler = new DefaultJsonRequestResponseHandler();
+        ((DefaultJsonRequestResponseHandler)handler).setCache(new DefaultCache());
+        
+        SerialObject myObject = new SerialObject();
+        myObject.setDate(new Date());
+        myObject.setStringField("some string");
+        myObject.setNestedObject(new SerialObject("nested object"));
+        myObject.setDoubleField(24.3);
+        
+        String objectIdInCache = handler.cacheObject(myObject);
+        
+        HttpServletRequest request = new HttpRequestMock();
+        ((HttpRequestMock)request).putParameter("arg0", "~"+objectIdInCache);
+        Object[] objects = handler.getObjects(getClass().getMethod("testMethod", SerialObject.class), request);
+        
+        assertNotNull(objects);
+        assertEquals(1, objects.length);
+        
+        SerialObject objDes = (SerialObject) objects[0];
+        assertEquals("some string", objDes.getStringField());
+        assertEquals((Double)24.3, objDes.getDoubleField());
+        assertEquals("nested object", objDes.getNestedObject().getStringField());
+    }    
 }
