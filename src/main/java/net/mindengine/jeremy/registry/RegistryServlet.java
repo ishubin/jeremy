@@ -1,6 +1,7 @@
 package net.mindengine.jeremy.registry;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,27 +38,32 @@ public class RegistryServlet extends HttpServlet {
         
         
         Object output = null;
-        if(uri.endsWith("~")) {
-            if(uri.matches("/.*/.*/~")) {
-                //TODO
+        try {
+            if(uri.endsWith("~")) {
+                if(uri.matches("/.*/.*/~")) {
+                    //TODO return list of arguments for object
+                }
+                else if(uri.matches("/.*/~")) {
+                    output = getListOfAllRemoteMethods(uri);
+                }
+                else if(uri.matches("/~")) {
+                    output = getListOfAllObjects();
+                }
             }
-            else if(uri.matches("/.*/~")) {
-                output = getListOfAllRemoteMethods(uri);
+            else if(uri.matches("/.*/.*")) {
+              //TODO invoke remote method
             }
-            else if(uri.matches("/~")) {
-                output = getListOfAllObjects();
+            else {
+                PrintWriter out = response.getWriter();
+                response.setStatus(404);
+                out.print("\"Not found\"");
+                out.flush();
+                out.close();
+                return;
             }
         }
-        else if(uri.matches("/.*/.*")) {
-          //TODO
-        }
-        else {
-            PrintWriter out = response.getWriter();
-            response.setStatus(404);
-            out.print("\"Not found\"");
-            out.flush();
-            out.close();
-            return;
+        catch (Exception e) {
+            output = e;
         }
         
         
@@ -82,7 +88,7 @@ public class RegistryServlet extends HttpServlet {
     }
     
     
-    private Object getListOfAllRemoteMethods(String uri) {
+    private Collection<String> getListOfAllRemoteMethods(String uri) throws RemoteObjectIsNotFound {
         Pattern pattern = Pattern.compile("/(.*?)/~");
         Matcher m = pattern.matcher(uri);
         while (m.find()) {
@@ -91,9 +97,9 @@ public class RegistryServlet extends HttpServlet {
             if(object!=null) {
                  return object.getRemoteMethods().keySet();
             }
-            return new RemoteObjectIsNotFound("There is no such remote object '"+name+"'");
+            throw new RemoteObjectIsNotFound("There is no such remote object '"+name+"'");
         }
-        return new IllegalArgumentException("Cannot find name of object in URL");
+        throw new IllegalArgumentException("Cannot find name of object in URL");
     }
 
 
