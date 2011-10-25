@@ -25,6 +25,15 @@ public interface RequestResponseHandler extends Cache {
     public Object[] getObjects(Method method, HttpServletRequest request) throws DeserializationException;
     
     /**
+     * Deserializes object from specified string
+     * @param serializedString
+     * @param type Class of the serialized object
+     * @return
+     * @throws DeserializationException
+     */
+    public Object deserializeObject(String serializedString, Class<?> type) throws DeserializationException;
+    
+    /**
      * Serializes object to string
      * @param object
      * @return

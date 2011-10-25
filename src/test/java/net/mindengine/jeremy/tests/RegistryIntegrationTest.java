@@ -10,7 +10,11 @@ import java.security.NoSuchAlgorithmException;
 
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
+import net.mindengine.jeremy.exceptions.ConnectionError;
+import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
 import net.mindengine.jeremy.objects.MyObject;
+import net.mindengine.jeremy.objects.MyRemoteInterface;
+import net.mindengine.jeremy.registry.Lookup;
 import net.mindengine.jeremy.registry.Registry;
 import net.mindengine.jeremy.registry.RemoteMethodMetadata;
 import net.mindengine.jeremy.starter.RegistryStarter;
@@ -101,6 +105,15 @@ public class RegistryIntegrationTest {
         assertNull(md.getReturns());
         assertEquals("setName", md.getMethod());
         assertEquals("myObject", md.getObject());
+    }
+    
+    @Test
+    public void shouldInvokeRemoteMethods() throws RemoteObjectIsNotFoundException, ConnectionError {
+        Lookup lookup = new Lookup(url);
+        
+        MyRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyRemoteInterface.class);
+        remoteInterface.setName("");
+        //TODO invoke and validate remote methods 
     }
     
     private static void assertContains(Object[]array, Object value) {

@@ -109,4 +109,15 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
         return cache;
     }
 
+
+    @Override
+    public Object deserializeObject(String serializedString, Class<?>type) throws DeserializationException {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            return mapper.readValue(serializedString,type);
+        } catch (Exception e) {
+            throw new DeserializationException(e);
+        }
+    }
+
 }
