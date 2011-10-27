@@ -12,7 +12,6 @@ import net.mindengine.jeremy.cache.Cache;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
-import net.mindengine.jeremy.objects.SerialObject;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -75,9 +74,9 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
     }
 
     @Override
-    public String cacheObject(SerialObject myObject) {
+    public String cacheObject(Object object) {
         verifyCache();
-        return cache.cacheObject(myObject);
+        return cache.cacheObject(object);
     }
 
 

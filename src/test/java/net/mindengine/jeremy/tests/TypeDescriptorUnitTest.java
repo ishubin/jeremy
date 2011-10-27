@@ -17,8 +17,6 @@ public class TypeDescriptorUnitTest {
     public void checkThatTypeDescriptorCollectAllMetadata() throws JsonGenerationException, JsonMappingException, IOException {
         TypeDescriptor descr = TypeDescriptor.createDescriptor(SerialObject.class);
         //TODO finish test
-        ObjectMapper mapper = new ObjectMapper();
-        
-        System.out.println(mapper.writeValueAsString(descr));
+       
     }
 }

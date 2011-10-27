@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.mindengine.jeremy.Remote;
+import net.mindengine.jeremy.cache.DefaultCache;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
 import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
 
@@ -36,7 +37,9 @@ public class Registry {
         servlet = new RegistryServlet();
         servlet.setRegistry(this);
         if(requestResponseHandler==null) {
-            requestResponseHandler = new DefaultJsonRequestResponseHandler();
+            DefaultJsonRequestResponseHandler requestResponseHandler = new DefaultJsonRequestResponseHandler();
+            this.requestResponseHandler = requestResponseHandler;
+            requestResponseHandler.setCache(new DefaultCache());
         }
         servlet.setRequestResponseHandler(requestResponseHandler);
         holder.setServlet(servlet);

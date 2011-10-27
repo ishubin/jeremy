@@ -3,10 +3,15 @@ package net.mindengine.jeremy.tests;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
@@ -108,6 +113,26 @@ public class RegistryIntegrationTest {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
+    public void uploadFileShouldReturnIdOfObjectsInCache() throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, IOException {
+        Client client = new Client();
+        
+        InputStream inputStream = getClass().getResourceAsStream("/test-file.png");
+        assertNotNull(inputStream);
+        HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~file", "myCustomParamName", inputStream);
+        ObjectMapper mapper = new ObjectMapper();
+        String content = response.getContent();
+        
+        assertEquals(200, response.getStatus());
+        Map<String, String> map = (Map<String, String>) mapper.readValue(content, new HashMap<String, String>().getClass());
+        
+        assertNotNull(map);
+        assertEquals(1, map.size());
+        assertNotNull(map.get("myCustomParamName"));
+        assertTrue(!map.get("myCustomParamName").isEmpty());
+    }
+    
+    @Test
     public void shouldInvokeRemoteMethods() throws RemoteObjectIsNotFoundException, ConnectionError {
         Lookup lookup = new Lookup(url);
         
@@ -134,7 +159,5 @@ public class RegistryIntegrationTest {
         str+="]";
         return str;
     }
-    
-    
     
 }

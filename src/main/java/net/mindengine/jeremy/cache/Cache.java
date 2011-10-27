@@ -1,6 +1,5 @@
 package net.mindengine.jeremy.cache;
 
-import net.mindengine.jeremy.objects.SerialObject;
 
 /**
  * Used in order to cache objects in memory
@@ -10,10 +9,10 @@ import net.mindengine.jeremy.objects.SerialObject;
 public interface Cache {
     /**
      * Puts object to cache and generate unique id for object in cache 
-     * @param myObject
+     * @param object
      * @return Id of object in cache
      */
-    public String cacheObject(SerialObject myObject);
+    public String cacheObject(Object object);
     
     /**
      * Fetches object from cache 

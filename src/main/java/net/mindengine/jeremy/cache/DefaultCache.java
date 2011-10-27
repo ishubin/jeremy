@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.mindengine.jeremy.objects.SerialObject;
-
 public class DefaultCache implements Cache {
 
     private Map<String, Object> objects = new ConcurrentHashMap<String, Object>();
@@ -25,7 +23,7 @@ public class DefaultCache implements Cache {
     }
     
     @Override
-    public synchronized String cacheObject(SerialObject myObject) {
+    public synchronized String cacheObject(Object myObject) {
         String key = getUniqueKey();
         objects.put(key, myObject);
         return key;
