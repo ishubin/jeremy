@@ -37,7 +37,8 @@ public class Lookup {
     
 
     @SuppressWarnings("unchecked")
-    public <T> T getRemoteObject(String string, Class<T> interfaceClass) throws RemoteObjectIsNotFoundException, ConnectionError{
+    public <T> T getRemoteObject(String objectName, Class<T> interfaceClass) throws RemoteObjectIsNotFoundException, ConnectionError{
+        //TODO cache all proxy objects in memory
         if(client==null) {
             client = new Client();
         }
@@ -54,7 +55,7 @@ public class Lookup {
             throw new IllegalArgumentException("Cannot create a remote object with "+interfaceClass.getName()+". Should support "+Remote.class.getName()+" interface");
         
         try {
-            HttpResponse httpResponse  = client.getRequest(url+"/"+string+"/~", null);
+            HttpResponse httpResponse  = client.getRequest(url+"/"+objectName+"/~", null);
             if(httpResponse.getStatus()<=300) {
                 
                 String[] remoteMethods = (String[]) requestResponseHandler.deserializeObject(httpResponse.getContent(), String[].class);
@@ -68,15 +69,13 @@ public class Lookup {
                         }
                     }
                     if(!found) {
-                        throw new RemoteObjectIsNotFoundException("Remote object '"+string+"' doesn't support specified interface "+interfaceClass.getName()+". Remote object doesn't support '"+method.getName()+"' method");
+                        throw new RemoteObjectIsNotFoundException("Remote object '"+objectName+"' doesn't support specified interface "+interfaceClass.getName()+". Remote object doesn't support '"+method.getName()+"' method");
                     }
                 }
-                
-                return (T)Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[]{interfaceClass}, invocationHandler);
-                
+                return (T)invocationHandler.createProxyRemoteObject(url+"/"+objectName, interfaceClass);
             }
             else if(httpResponse.getStatus()==404) {
-                throw new RemoteObjectIsNotFoundException("There is no remote object with name '"+string+"'");
+                throw new RemoteObjectIsNotFoundException("There is no remote object with name '"+objectName+"'");
             }
             else throw new ConnectionError(httpResponse.getContent());
         } 
