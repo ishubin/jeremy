@@ -33,10 +33,6 @@ public class Client {
     private Map<String, String> httpHeaders = new HashMap<String, String>();
     
     
-    public HttpResponse sendFile(String requestUrl, File file) throws IOException {
-        
-        return null;
-    }
     
     /**
      * Send GET or POST request
@@ -121,6 +117,7 @@ public class Client {
         rd.close();
 
         HttpResponse response = new HttpResponse();
+        response.setUrl(targetUrl);
         response.setContent(buff.toString());
         response.setStatus(connection.getResponseCode());
         return response;

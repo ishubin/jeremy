@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,7 +14,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import net.mindengine.jeremy.cache.DefaultCache;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.RequestResponseHandler;
@@ -32,31 +30,6 @@ public class RequestResponseHandlerUnitTest {
         return 123L;
     }
     
-    
-    @Test
-    public void jsonDeserializationForMultipleSimpleMethodArgumentsShouldWork() throws SecurityException, NoSuchMethodException, DeserializationException {
-        RequestResponseHandler handler = new DefaultJsonRequestResponseHandler();
-        
-        HttpServletRequest request = new HttpRequestMock();
-        ((HttpRequestMock)request).putParameter("arg0", "\"string text\"");
-        ((HttpRequestMock)request).putParameter("arg1", "12");
-        ((HttpRequestMock)request).putParameter("arg2", "[2,3]");
-        
-        Method method = getClass().getMethod("sampleMethod", String.class, Integer.class, Integer[].class);
-        Object[]objects = handler.getObjects(method, request);
-        
-        assertNotNull(objects);
-        assertEquals(3, objects.length);
-        
-        assertEquals("string text", (String)objects[0]);
-        assertEquals((Integer)12, (Integer)objects[1]);
-        Integer[] ints = (Integer[])objects[2];
-        
-        assertEquals(2, ints.length);
-        assertEquals(2, (int)ints[0]);
-        assertEquals(3, (int)ints[1]);
-        
-    }
     
     @Test
     public void jsonSerializationForSimpleMethodArgumentsShouldWork() throws SerializationException {
@@ -102,12 +75,11 @@ public class RequestResponseHandlerUnitTest {
         
         HttpServletRequest request = new HttpRequestMock();
         ((HttpRequestMock)request).putParameter("arg0", serialized);
-        Object[] objects = handler.getObjects(getClass().getMethod("testMethod", SerialObject.class), request);
         
-        assertNotNull(objects);
-        assertEquals(1, objects.length);
+        SerialObject objDes = (SerialObject) handler.deserializeObject(serialized, SerialObject.class);
         
-        SerialObject objDes = (SerialObject) objects[0];
+        assertNotNull(objDes);
+        
         assertEquals(1319180501953L, objDes.getDate().getTime());
         assertEquals((Double)12.3, objDes.getDoubleField());
         assertEquals((Float)23.1f, objDes.getFloatField());
@@ -126,32 +98,5 @@ public class RequestResponseHandlerUnitTest {
         
         assertEquals("Nested object", objDes.getNestedObject().getStringField());
         assertEquals("object", objDes.getStringField());
-        
     }
-    
-    @Test
-    public void handlerShouldBeAbleToCacheObjects() throws SecurityException, DeserializationException, NoSuchMethodException {
-        RequestResponseHandler handler = new DefaultJsonRequestResponseHandler();
-        ((DefaultJsonRequestResponseHandler)handler).setCache(new DefaultCache());
-        
-        SerialObject myObject = new SerialObject();
-        myObject.setDate(new Date());
-        myObject.setStringField("some string");
-        myObject.setNestedObject(new SerialObject("nested object"));
-        myObject.setDoubleField(24.3);
-        
-        String objectIdInCache = handler.cacheObject(myObject);
-        
-        HttpServletRequest request = new HttpRequestMock();
-        ((HttpRequestMock)request).putParameter("arg0", "~"+objectIdInCache);
-        Object[] objects = handler.getObjects(getClass().getMethod("testMethod", SerialObject.class), request);
-        
-        assertNotNull(objects);
-        assertEquals(1, objects.length);
-        
-        SerialObject objDes = (SerialObject) objects[0];
-        assertEquals("some string", objDes.getStringField());
-        assertEquals((Double)24.3, objDes.getDoubleField());
-        assertEquals("nested object", objDes.getNestedObject().getStringField());
-    }    
 }

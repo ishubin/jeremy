@@ -136,9 +136,15 @@ public class RegistryIntegrationTest {
     public void shouldInvokeRemoteMethods() throws RemoteObjectIsNotFoundException, ConnectionError {
         Lookup lookup = new Lookup(url);
         
+        //Creating proxy for remote object
         MyRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyRemoteInterface.class);
-        remoteInterface.setName("");
-        //TODO invoke and validate remote methods 
+        
+        //Invoking remote method.
+        remoteInterface.setName("qwe");
+        
+        //Checking that the previous method was implemented properly 
+        String name = remoteInterface.getName();
+        assertEquals("qwe", name);
     }
     
     private static void assertContains(Object[]array, Object value) {

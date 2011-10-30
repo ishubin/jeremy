@@ -2,6 +2,7 @@ package net.mindengine.jeremy.client;
 
 public class HttpResponse {
     
+    private String url;
     private int status;
     private String content;
     public void setContent(String content) {
@@ -15,5 +16,11 @@ public class HttpResponse {
     }
     public int getStatus() {
         return status;
+    }
+    public void setUrl(String url) {
+        this.url = url;
+    }
+    public String getUrl() {
+        return url;
     }
 }

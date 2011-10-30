@@ -80,6 +80,7 @@ public class RegistryServlet extends HttpServlet {
         }
         catch (Exception e) {
             output = e;
+            e.printStackTrace();
         }
         
         PrintWriter out = response.getWriter();
@@ -109,8 +110,8 @@ public class RegistryServlet extends HttpServlet {
     
     
     private Object invokeRemoteMethod(String uri, HttpServletRequest request) throws RemoteObjectIsNotFoundException, DeserializationException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-        Pattern pattern = Pattern.compile("/(.*?)/(.*?)/~");
-        Matcher m = pattern.matcher(uri);
+        Pattern pattern = Pattern.compile("/(.*?)/(.*?)/");
+        Matcher m = pattern.matcher(uri+"/");
         while (m.find()) {
             String objectName = m.group(1);
             String methodName = m.group(2);
@@ -196,7 +197,7 @@ public class RegistryServlet extends HttpServlet {
                      
                      metadata.setArguments(arguments);
                      
-                     if(method.getReturnType()!=null && !method.getReturnType().getName().equals("void")) {
+                     if(!method.getReturnType().equals(Void.TYPE)) {
                          metadata.setReturns(TypeDescriptor.createDescriptor(method.getReturnType()));
                      }
                      return metadata;

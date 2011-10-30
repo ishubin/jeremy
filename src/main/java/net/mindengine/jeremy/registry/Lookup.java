@@ -1,7 +1,6 @@
 package net.mindengine.jeremy.registry;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 import net.mindengine.jeremy.Remote;
 import net.mindengine.jeremy.client.Client;
@@ -15,7 +14,6 @@ import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
 public class Lookup {
 
     private String url;
-    private ObjectInvocationHandler invocationHandler;
     private Client client;
     private RequestResponseHandler requestResponseHandler; 
     
@@ -42,10 +40,6 @@ public class Lookup {
         if(client==null) {
             client = new Client();
         }
-        if(invocationHandler==null) {
-            invocationHandler = new ObjectInvocationHandler();
-        }
-        invocationHandler.setClient(client);
         
         if(requestResponseHandler == null) {
             requestResponseHandler = new DefaultJsonRequestResponseHandler();
@@ -72,7 +66,7 @@ public class Lookup {
                         throw new RemoteObjectIsNotFoundException("Remote object '"+objectName+"' doesn't support specified interface "+interfaceClass.getName()+". Remote object doesn't support '"+method.getName()+"' method");
                     }
                 }
-                return (T)invocationHandler.createProxyRemoteObject(url+"/"+objectName, interfaceClass);
+                return (T)ObjectInvocationHandler.createProxyRemoteObject(url, objectName, interfaceClass, client, requestResponseHandler);
             }
             else if(httpResponse.getStatus()==404) {
                 throw new RemoteObjectIsNotFoundException("There is no remote object with name '"+objectName+"'");
@@ -82,14 +76,6 @@ public class Lookup {
         catch (Exception e) {
             throw new ConnectionError("Cannot reach remote server", e);
         }
-    }
-
-    public void setInvocationHandler(ObjectInvocationHandler invocationHandler) {
-        this.invocationHandler = invocationHandler;
-    }
-
-    public ObjectInvocationHandler getInvocationHandler() {
-        return invocationHandler;
     }
 
     public void setClient(Client client) {
