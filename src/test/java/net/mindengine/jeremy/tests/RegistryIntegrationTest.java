@@ -180,6 +180,20 @@ public class RegistryIntegrationTest {
         
     }
     
+    @Test
+    public void shouldSendNullObjectAlongWithRemoteMethodInvocation() throws RemoteObjectIsNotFoundException, ConnectionError {
+      //Creating proxy for remote object
+        MyRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyRemoteInterface.class);
+        
+        //Invoking remote method.
+        remoteInterface.setSerialObject(null);
+        
+        SerialObject obj = remoteInterface.getSerialObject();
+        
+        assertNull(obj);
+        
+    }
+    
     private static void assertContains(Object[]array, Object value) {
         for(Object item : array) {
             if(item.equals(value)) {
