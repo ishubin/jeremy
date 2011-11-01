@@ -5,8 +5,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -14,8 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sql.rowset.serial.SerialArray;
-
+import net.mindengine.jeremy.bin.RemoteFile;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
@@ -93,11 +95,13 @@ public class RegistryIntegrationTest {
         ObjectMapper mapper = new ObjectMapper();
         String[] objects = mapper.readValue(response.getContent(), String[].class);
         assertNotNull(objects);
-        assertEquals(6, objects.length);
+        assertEquals(8, objects.length);
         assertContains(objects, "getName");
         assertContains(objects, "getId");
         assertContains(objects, "setName");
         assertContains(objects, "setLong");
+        assertContains(objects, "uploadFile");
+        assertContains(objects, "downloadFile");
         assertContains(objects, "setSerialObject");
         assertContains(objects, "getSerialObject");
     }
@@ -124,10 +128,14 @@ public class RegistryIntegrationTest {
     @SuppressWarnings("unchecked")
     public void uploadFileShouldReturnIdOfObjectsInCache() throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, IOException {
         Client client = new Client();
+        RemoteFile remoteFile = new RemoteFile(new File(getClass().getResource("/test-file.png").toURI()));
         
-        InputStream inputStream = getClass().getResourceAsStream("/test-file.png");
-        assertNotNull(inputStream);
-        HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~file", "myCustomParamName", inputStream);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
+        ObjectOutputStream out = new ObjectOutputStream(bos) ;
+        out.writeObject(remoteFile);
+        out.close();
+        
+        HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~bin", "myCustomParamName", new ByteArrayInputStream(bos.toByteArray()));
         ObjectMapper mapper = new ObjectMapper();
         String content = response.getContent();
         
@@ -191,7 +199,12 @@ public class RegistryIntegrationTest {
         SerialObject obj = remoteInterface.getSerialObject();
         
         assertNull(obj);
-        
+    }
+    
+    
+    @Test
+    public void shouldSendBinaryObjectAlongWithRemoteMethodInvocation() {
+        //TODO implement this test
     }
     
     private static void assertContains(Object[]array, Object value) {

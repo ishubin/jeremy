@@ -86,4 +86,9 @@ public class DefaultJsonRequestResponseHandler implements RequestResponseHandler
         }
     }
 
+    @Override
+    public String getMimeType() {
+        return "application/json";
+    }
+
 }

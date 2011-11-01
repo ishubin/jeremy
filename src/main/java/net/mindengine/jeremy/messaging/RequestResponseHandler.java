@@ -28,5 +28,10 @@ public interface RequestResponseHandler extends Cache {
      */
     public String serializeResponse(Object object) throws SerializationException;
 
+    /**
+     * Returns the MIME type which further will be used in "Content-Type" header
+     * @return
+     */
+    public String getMimeType();
     
 }

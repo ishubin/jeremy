@@ -59,6 +59,13 @@ public class Registry {
         if(remoteObject==null) {
             throw new IllegalArgumentException("Cannot add null objects");
         }
+        if(name==null || name.isEmpty()) {
+            throw new IllegalArgumentException("Object name should not be empty");
+        }
+        if(name.startsWith("~")) {
+            throw new IllegalArgumentException("Object name is invalid");
+        }
+        
         RemoteObject object = new RemoteObject();
         object.setName(name);
         object.setObject(remoteObject);

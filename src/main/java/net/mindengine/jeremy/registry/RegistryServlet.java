@@ -1,5 +1,7 @@
 package net.mindengine.jeremy.registry;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,6 +18,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.mindengine.jeremy.bin.Binary;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.RemoteMethodIsNotFoundException;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
@@ -63,7 +66,7 @@ public class RegistryServlet extends HttpServlet {
                     output = getListOfAllObjects();
                 }
             }
-            else if (uri.equals("/~file")) {
+            else if (uri.equals("/~bin")) {
                 output = uploadBinaryFile(request);
             }
             else if(uri.matches("/.*/.*")) {
@@ -83,31 +86,53 @@ public class RegistryServlet extends HttpServlet {
             e.printStackTrace();
         }
         
-        PrintWriter out = response.getWriter();
         try {
-            String body = requestResponseHandler.serializeResponse(output);
-            if(output instanceof Throwable) {
-                response.setStatus(400);
-                Throwable error = (Throwable) output;
-                
-                RemoteExceptionWrapper remoteException = new RemoteExceptionWrapper();
-                remoteException.setType(error.getClass().getName());
-                remoteException.setError(error);
-                out.print(registry.getRequestResponseHandler().serializeResponse(remoteException));
+            if(output!=null && Binary.class.isAssignableFrom(output.getClass())){
+                printBinaryObjectToResponse(output, response);
             }
             else {
-                response.setStatus(200);
-                out.print(body);
+                printObjectToResponse(output, response);
             }
         } catch (SerializationException e) {
+            PrintWriter out = response.getWriter();
             response.setStatus(422);
             out.print("\"Unprocessable Entity\"");
+            out.flush();
+            out.close();
         }
+    }
+    
+    
+    
+    private void printBinaryObjectToResponse(Object object, HttpServletResponse response) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
+        ObjectOutputStream oos = new ObjectOutputStream(bos) ;
+        oos.writeObject(object);
+        oos.close();
         
+        response.setContentType("application/binary");
+    }
+    
+    private void printObjectToResponse(Object output, HttpServletResponse response) throws SerializationException, IOException {
+        PrintWriter out = response.getWriter();
+        String body = requestResponseHandler.serializeResponse(output);
+        if(output instanceof Throwable) {
+            response.setStatus(400);
+            Throwable error = (Throwable) output;
+            
+            RemoteExceptionWrapper remoteException = new RemoteExceptionWrapper();
+            remoteException.setType(error.getClass().getName());
+            remoteException.setError(error);
+            out.print(registry.getRequestResponseHandler().serializeResponse(remoteException));
+        }
+        else {
+            response.setStatus(200);
+            out.print(body);
+        }
+        response.setContentType(requestResponseHandler.getMimeType());
         out.flush();
         out.close();
     }
-    
     
     private Object invokeRemoteMethod(String uri, HttpServletRequest request) throws RemoteObjectIsNotFoundException, DeserializationException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
         Pattern pattern = Pattern.compile("/(.*?)/(.*?)/");
@@ -163,6 +188,8 @@ public class RegistryServlet extends HttpServlet {
         if(files!=null && files.size()>0) {
             for(FileItem fileItem : files) {
                 byte[] content = fileItem.get();
+                
+                //TODO deserialize binary object
                 String id = requestResponseHandler.cacheObject(content);
                 cachedObjects.put(fileItem.getFieldName(), id);
             }
