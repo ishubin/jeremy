@@ -1,8 +1,8 @@
 package net.mindengine.jeremy.client;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,6 +32,7 @@ public class Client {
     private int maxBufferSize = 1024;
     private Map<String, String> httpHeaders = new HashMap<String, String>();
     
+    public static final String APPLICATION_BINARY = "application/binary".intern();
     
     
     /**
@@ -100,6 +101,7 @@ public class Client {
             wr.close ();
         }
 
+        //Read response
         InputStream is;
         if (connection.getResponseCode() >= 400) {
             is = connection.getErrorStream();
@@ -107,19 +109,36 @@ public class Client {
         else {
             is = connection.getInputStream();
         }
-        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-        String line;
-        StringBuffer buff = new StringBuffer();
-        while ((line = rd.readLine()) != null) {
-            buff.append(line);
-            buff.append('\r');
-        }
-        rd.close();
-
+        
         HttpResponse response = new HttpResponse();
         response.setUrl(targetUrl);
-        response.setContent(buff.toString());
         response.setStatus(connection.getResponseCode());
+        response.setContentType(connection.getContentType());
+        
+        if(connection.getContentType().equals(APPLICATION_BINARY)) {
+            // Reading binary response
+            ByteArrayOutputStream bous = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int len1 = 0;
+            while ( (len1 = is.read(buffer)) > 0 ) {
+                bous.write(buffer,0, len1);
+            }
+            bous.close();
+            response.setBytes(bous.toByteArray());
+        }
+        else {
+            // Reading text response
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            String line;
+            StringBuffer buff = new StringBuffer();
+            while ((line = rd.readLine()) != null) {
+                buff.append(line);
+                buff.append('\r');
+            }
+            rd.close();
+            response.setContent(buff.toString());
+        }
+
         return response;
     }
     
@@ -216,6 +235,7 @@ public class Client {
         HttpResponse response = new HttpResponse();
         response.setContent(buff.toString());
         response.setStatus(connection.getResponseCode());
+        response.setContentType(connection.getContentType());
         return response;
     }
     

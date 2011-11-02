@@ -5,6 +5,8 @@ public class HttpResponse {
     private String url;
     private int status;
     private String content;
+    private String contentType;
+    private byte[] bytes;
     public void setContent(String content) {
         this.content = content;
     }
@@ -22,5 +24,17 @@ public class HttpResponse {
     }
     public String getUrl() {
         return url;
+    }
+    public String getContentType() {
+        return contentType;
+    }
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
+    public byte[] getBytes() {
+        return bytes;
+    }
+    public void setBytes(byte[] bytes) {
+        this.bytes = bytes;
     }
 }

@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.mindengine.jeremy.bin.Binary;
+import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.RemoteMethodIsNotFoundException;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
@@ -44,7 +45,6 @@ public class RegistryServlet extends HttpServlet {
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("text/json");
         
         String uri = request.getRequestURI();
         if(uri.endsWith("/")) {
@@ -110,7 +110,7 @@ public class RegistryServlet extends HttpServlet {
         oos.writeObject(object);
         oos.close();
         
-        response.setContentType("application/binary");
+        response.setContentType(Client.APPLICATION_BINARY);
     }
     
     private void printObjectToResponse(Object output, HttpServletResponse response) throws SerializationException, IOException {

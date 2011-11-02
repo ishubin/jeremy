@@ -2,8 +2,8 @@ package net.mindengine.jeremy.registry;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -79,10 +79,20 @@ public class ObjectInvocationHandler implements InvocationHandler {
 
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
-                return requestResponseHandler.deserializeObject(response.getContent(), method.getReturnType());
+                
+                
+                if(response.getContentType().equals(Client.APPLICATION_BINARY)) {
+                    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(response.getBytes()));
+                    return ois.readObject();
+                }
+                else {
+                    //TODO change this to multiple deserializers handling
+                    return requestResponseHandler.deserializeObject(response.getContent(), method.getReturnType());
+                }
             } else
                 return null;
-        } else {
+        } 
+        else {
             // TODO handle remote exceptions
             throw new RuntimeException("Something is wrong:" + response.getContent());
         }
