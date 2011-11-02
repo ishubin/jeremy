@@ -1,15 +1,18 @@
 package net.mindengine.jeremy.registry;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.mindengine.jeremy.Remote;
+import net.mindengine.jeremy.cache.Cache;
 import net.mindengine.jeremy.cache.DefaultCache;
-import net.mindengine.jeremy.messaging.RequestResponseHandler;
-import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
+import net.mindengine.jeremy.client.Client;
+import net.mindengine.jeremy.messaging.LanguageHandler;
+import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -22,11 +25,29 @@ public class Registry {
     private Server server;
     private Map<String, RemoteObject> remoteObjects = new ConcurrentHashMap<String, RemoteObject>();
     private RegistryServlet servlet;
-    private RequestResponseHandler requestResponseHandler;
+    private Cache objectCache;
+    
+    /**
+     * Map of language-handlers with Content-Type as a key.
+     */
+    private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
+    
+    
+    private String defaultContentType = Client.APPLICATION_BINARY;
+    
+    public void addLanguageHandler(String contentType, LanguageHandler languageHandler) {
+        this.languageHandlers.put(contentType, languageHandler);
+    }
+    
     
     public void start() throws Exception {
+        
+        if(objectCache==null) {
+            objectCache = new DefaultCache();
+        }
+        
         server = new Server();
-
+        
         Connector connector = new SelectChannelConnector();
         connector.setPort(8085);
 
@@ -36,12 +57,11 @@ public class Registry {
         ServletHolder holder = new ServletHolder();
         servlet = new RegistryServlet();
         servlet.setRegistry(this);
-        if(requestResponseHandler==null) {
-            DefaultJsonRequestResponseHandler requestResponseHandler = new DefaultJsonRequestResponseHandler();
-            this.requestResponseHandler = requestResponseHandler;
-            requestResponseHandler.setCache(new DefaultCache());
+        
+        if(!getLanguageHandlers().containsKey(Client.APPLICATION_BINARY)) {
+            getLanguageHandlers().put(Client.APPLICATION_BINARY, new DefaultBinaryLanguageHandler());
         }
-        servlet.setRequestResponseHandler(requestResponseHandler);
+        
         holder.setServlet(servlet);
         context.addServlet(holder, "/*");
         
@@ -53,6 +73,18 @@ public class Registry {
 
     public void stop() throws Exception {
         server.stop();
+    }
+    
+    /**
+     * Returns either language-handler for specified contentType either default language-handler 
+     * @param contentType
+     * @return
+     */
+    public LanguageHandler getLanguageHandler(String contentType) {
+        if(contentType!=null && languageHandlers.containsKey(contentType)) {
+            return languageHandlers.get(contentType);
+        }
+        else return languageHandlers.get(defaultContentType);
     }
     
     public void addObject(String name, Remote remoteObject) {
@@ -113,20 +145,36 @@ public class Registry {
         return list;
     }
 
-    public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
-        this.requestResponseHandler = requestResponseHandler;
-    }
-
-    public RequestResponseHandler getRequestResponseHandler() {
-        return requestResponseHandler;
-    }
-
     public void setRemoteObjects(Map<String, RemoteObject> remoteObjects) {
         this.remoteObjects = remoteObjects;
     }
 
     public Map<String, RemoteObject> getRemoteObjects() {
         return remoteObjects;
+    }
+
+    public String getDefaultContentType() {
+        return defaultContentType;
+    }
+
+    public void setDefaultContentType(String defaultContentType) {
+        this.defaultContentType = defaultContentType;
+    }
+
+    public Map<String, LanguageHandler> getLanguageHandlers() {
+        return languageHandlers;
+    }
+
+    public void setLanguageHandlers(Map<String, LanguageHandler> languageHandlers) {
+        this.languageHandlers = languageHandlers;
+    }
+
+    public Cache getObjectCache() {
+        return objectCache;
+    }
+
+    public void setObjectCache(Cache objectCache) {
+        this.objectCache = objectCache;
     }
 
 

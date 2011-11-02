@@ -16,8 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
-import net.mindengine.jeremy.messaging.RequestResponseHandler;
-import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
+import net.mindengine.jeremy.messaging.LanguageHandler;
+import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
 import net.mindengine.jeremy.objects.SerialObject;
 import net.mindengine.jeremy.tests.mocks.HttpRequestMock;
 
@@ -33,7 +33,7 @@ public class RequestResponseHandlerUnitTest {
     
     @Test
     public void jsonSerializationForSimpleMethodArgumentsShouldWork() throws SerializationException {
-        RequestResponseHandler handler = new DefaultJsonRequestResponseHandler();
+        LanguageHandler handler = new DefaultJsonLanguageHandler();
         
         assertEquals("\"string text\"", handler.serializeResponse("string text"));
         assertEquals("132", handler.serializeResponse((Integer)132));
@@ -70,7 +70,7 @@ public class RequestResponseHandlerUnitTest {
         
         obj.setNestedObject(new SerialObject("Nested object"));
         obj.setStringField("object");
-        RequestResponseHandler handler = new DefaultJsonRequestResponseHandler();
+        LanguageHandler handler = new DefaultJsonLanguageHandler();
         String serialized = handler.serializeResponse(obj);
         
         HttpServletRequest request = new HttpRequestMock();

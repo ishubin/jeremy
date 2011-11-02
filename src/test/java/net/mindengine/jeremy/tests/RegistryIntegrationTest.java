@@ -22,6 +22,8 @@ import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
+import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
+import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
 import net.mindengine.jeremy.objects.MyObject;
 import net.mindengine.jeremy.objects.MyRemoteInterface;
 import net.mindengine.jeremy.objects.SerialObject;
@@ -48,6 +50,8 @@ public class RegistryIntegrationTest {
     public static void initializeRegistry() throws InterruptedException {
         registryStarter = new RegistryStarter();
         Registry registry = new Registry();
+        registry.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
+        registry.setDefaultContentType(Client.APPLICATION_JSON);
         
         myObject = new MyObject();
         registry.addObject("myObject", myObject);
@@ -58,7 +62,9 @@ public class RegistryIntegrationTest {
         Thread.sleep(2000);
         
         lookup = new Lookup(url);
-        
+        lookup.setDefaultContentType(Client.APPLICATION_JSON);
+        lookup.addLanguageHandler(Client.APPLICATION_BINARY, new DefaultBinaryLanguageHandler());
+        lookup.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
     }
     
     @AfterClass

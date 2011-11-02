@@ -33,6 +33,7 @@ public class Client {
     private Map<String, String> httpHeaders = new HashMap<String, String>();
     
     public static final String APPLICATION_BINARY = "application/binary".intern();
+    public static final String APPLICATION_JSON = "application/json".intern();
     
     
     /**

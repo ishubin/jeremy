@@ -1,5 +1,4 @@
 package net.mindengine.jeremy.messaging;
-import net.mindengine.jeremy.cache.Cache;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
 
@@ -9,7 +8,7 @@ import net.mindengine.jeremy.exceptions.SerializationException;
  * @author Ivan Shubin
  *
  */
-public interface RequestResponseHandler extends Cache {
+public interface LanguageHandler {
     
     /**
      * Deserializes object from specified string
@@ -27,11 +26,27 @@ public interface RequestResponseHandler extends Cache {
      * @throws SerializationException 
      */
     public String serializeResponse(Object object) throws SerializationException;
+    
+    /**
+     * Serializes object to bytes
+     * @param object
+     * @return
+     * @throws SerializationException 
+     */
+    public byte[] serializeResponseToBytes(Object object) throws SerializationException;
 
     /**
      * Returns the MIME type which further will be used in "Content-Type" header
      * @return
      */
     public String getMimeType();
+
+    /**
+     * Deserializes object from specified bytes array
+     * @param content
+     * @param type
+     * @return
+     */
+    public Object deserializeObject(byte[] content, Class<?> type) throws DeserializationException;
     
 }

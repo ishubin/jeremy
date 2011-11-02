@@ -2,6 +2,7 @@ package net.mindengine.jeremy.registry;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,7 +25,7 @@ import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.RemoteMethodIsNotFoundException;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
 import net.mindengine.jeremy.exceptions.SerializationException;
-import net.mindengine.jeremy.messaging.RequestResponseHandler;
+import net.mindengine.jeremy.messaging.LanguageHandler;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
@@ -39,7 +40,6 @@ public class RegistryServlet extends HttpServlet {
      */
     private static final long serialVersionUID = 8419855038481651498L;
 
-    private RequestResponseHandler requestResponseHandler;
     private Registry registry;
     
     
@@ -91,7 +91,7 @@ public class RegistryServlet extends HttpServlet {
                 printBinaryObjectToResponse(output, response);
             }
             else {
-                printObjectToResponse(output, response);
+                printObjectToResponse(output, request, response);
             }
         } catch (SerializationException e) {
             PrintWriter out = response.getWriter();
@@ -104,18 +104,32 @@ public class RegistryServlet extends HttpServlet {
     
     
     
-    private void printBinaryObjectToResponse(Object object, HttpServletResponse response) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
-        ObjectOutputStream oos = new ObjectOutputStream(bos) ;
-        oos.writeObject(object);
-        oos.close();
+    private void printBinaryObjectToResponse(Object object, HttpServletResponse response) throws IOException, SerializationException {
+        LanguageHandler languageHandler = registry.getLanguageHandler(Client.APPLICATION_BINARY);
         
+        byte[] bytes = languageHandler.serializeResponseToBytes(object);
         response.setContentType(Client.APPLICATION_BINARY);
+        OutputStream os = response.getOutputStream();
+        os.write(bytes);
+        os.close();
+        os.flush();
     }
     
-    private void printObjectToResponse(Object output, HttpServletResponse response) throws SerializationException, IOException {
+    private void printObjectToResponse(Object output, HttpServletRequest request, HttpServletResponse response) throws SerializationException, IOException {
         PrintWriter out = response.getWriter();
-        String body = requestResponseHandler.serializeResponse(output);
+        
+        //Will use the same language in response as in request
+        String contentType = request.getContentType();
+        LanguageHandler languageHandler = null;
+        if(contentType!=null && registry.getLanguageHandlers().containsKey(contentType)) {
+            languageHandler = registry.getLanguageHandlers().get(contentType);
+        }
+        else {
+            //In case if there is no registered language handler will use default one
+            languageHandler = registry.getLanguageHandlers().get(registry.getDefaultContentType());
+        }
+        
+        String body = languageHandler.serializeResponse(output);
         if(output instanceof Throwable) {
             response.setStatus(400);
             Throwable error = (Throwable) output;
@@ -123,13 +137,13 @@ public class RegistryServlet extends HttpServlet {
             RemoteExceptionWrapper remoteException = new RemoteExceptionWrapper();
             remoteException.setType(error.getClass().getName());
             remoteException.setError(error);
-            out.print(registry.getRequestResponseHandler().serializeResponse(remoteException));
+            out.print(languageHandler.serializeResponse(remoteException));
         }
         else {
             response.setStatus(200);
             out.print(body);
         }
-        response.setContentType(requestResponseHandler.getMimeType());
+        response.setContentType(languageHandler.getMimeType());
         out.flush();
         out.close();
     }
@@ -162,13 +176,14 @@ public class RegistryServlet extends HttpServlet {
                         //Fetching object from cache
                         String key = parameter.substring(1);
                         
-                        arguments[i] = registry.getRequestResponseHandler().retrieveObjectFromCache(key);
+                        arguments[i] = registry.getObjectCache().retrieveObjectFromCache(key);
                         if(arguments[i]==null){
                             throw new NullPointerException("Couldn't find argument in cache with a key "+key);
                         }
                     }
                     else {
-                        arguments[i] = requestResponseHandler.deserializeObject(parameter, parameterTypes[i]);
+                        LanguageHandler languageHandler = registry.getLanguageHandler(request.getContentType());
+                        arguments[i] = languageHandler.deserializeObject(parameter, parameterTypes[i]);
                     }
                 }
                 else arguments[i] = null;
@@ -180,7 +195,7 @@ public class RegistryServlet extends HttpServlet {
 
 
     @SuppressWarnings("unchecked")
-    private Map<String, String> uploadBinaryFile(HttpServletRequest request) throws FileUploadException {
+    private Map<String, String> uploadBinaryFile(HttpServletRequest request) throws FileUploadException, DeserializationException {
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         List<FileItem> files = upload.parseRequest(request);
         
@@ -189,8 +204,16 @@ public class RegistryServlet extends HttpServlet {
             for(FileItem fileItem : files) {
                 byte[] content = fileItem.get();
                 
-                //TODO deserialize binary object
-                String id = requestResponseHandler.cacheObject(content);
+                //Looking for binary language-handler in registry
+                LanguageHandler languageHandler = registry.getLanguageHandlers().get(Client.APPLICATION_BINARY);
+                if(languageHandler==null) {
+                    throw new NullPointerException("There is no language handler specified for type: "+Client.APPLICATION_BINARY);
+                }
+                
+                Object object = languageHandler.deserializeObject(content, null);
+                
+                //Putting object to cache so it will be used later
+                String id = registry.getObjectCache().cacheObject(object);
                 cachedObjects.put(fileItem.getFieldName(), id);
             }
             return cachedObjects;
@@ -261,15 +284,6 @@ public class RegistryServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         doGet(request, response);
     }
-
-    public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
-        this.requestResponseHandler = requestResponseHandler;
-    }
-
-    public RequestResponseHandler getRequestResponseHandler() {
-        return requestResponseHandler;
-    }
-
 
     public void setRegistry(Registry registry) {
         this.registry = registry;

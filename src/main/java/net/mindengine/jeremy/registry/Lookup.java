@@ -9,15 +9,15 @@ import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
-import net.mindengine.jeremy.messaging.RequestResponseHandler;
-import net.mindengine.jeremy.messaging.json.DefaultJsonRequestResponseHandler;
+import net.mindengine.jeremy.messaging.LanguageHandler;
 
 
 public class Lookup {
 
     private String url;
     private Client client;
-    private RequestResponseHandler requestResponseHandler; 
+    private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
+    private String defaultContentType = Client.APPLICATION_BINARY;
     private Map<String, Map<Class<?>, Object>> cashedRemoteObjects = new HashMap<String, Map<Class<?>, Object>>();
     
     public Lookup() {
@@ -28,6 +28,11 @@ public class Lookup {
         this.url = url;
     }
 
+    
+    public void addLanguageHandler(String contentType, LanguageHandler languageHandler) {
+        this.languageHandlers.put(contentType, languageHandler);
+    }
+    
     public void setUrl(String url) {
         this.url = url;
     }
@@ -54,6 +59,13 @@ public class Lookup {
         map.put(interfaceClass, object);
     }
 
+    public LanguageHandler getLanguageHandler(String contentType) {
+        if(contentType!=null && languageHandlers.containsKey(contentType)){
+            return languageHandlers.get(contentType);
+        }
+        else return languageHandlers.get(defaultContentType);
+    }
+    
     @SuppressWarnings("unchecked")
     public <T> T getRemoteObject(String objectName, Class<T> interfaceClass) throws RemoteObjectIsNotFoundException, ConnectionError{
         
@@ -63,22 +75,21 @@ public class Lookup {
             return (T) objectFromCache;
         }
         
+        LanguageHandler languageHandler = getLanguageHandler(defaultContentType);
+        
         if(client==null) {
             client = new Client();
-        }
-        
-        if(requestResponseHandler == null) {
-            requestResponseHandler = new DefaultJsonRequestResponseHandler();
         }
         
         if(!Remote.class.isAssignableFrom(interfaceClass)) 
             throw new IllegalArgumentException("Cannot create a remote object with "+interfaceClass.getName()+". Should support "+Remote.class.getName()+" interface");
         
         try {
+            //TODO send content-type to server
             HttpResponse httpResponse  = client.getRequest(url+"/"+objectName+"/~", null);
             if(httpResponse.getStatus()<=300) {
                 
-                String[] remoteMethods = (String[]) requestResponseHandler.deserializeObject(httpResponse.getContent(), String[].class);
+                String[] remoteMethods = (String[]) languageHandler.deserializeObject(httpResponse.getContent(), String[].class);
                 
                 Method[] declaredMethods = interfaceClass.getMethods();
                 for(Method method : declaredMethods) {
@@ -93,7 +104,7 @@ public class Lookup {
                     }
                 }
                 
-                T object =  (T)ObjectInvocationHandler.createProxyRemoteObject(url, objectName, interfaceClass, client, requestResponseHandler);
+                T object =  (T)ObjectInvocationHandler.createProxyRemoteObject(url, objectName, interfaceClass, client, this);
                 /**
                  * Putting just created proxy object to cache, so next time it will not be generated again
                  */
@@ -118,11 +129,19 @@ public class Lookup {
         return client;
     }
 
-    public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
-        this.requestResponseHandler = requestResponseHandler;
+    public Map<String, LanguageHandler> getLanguageHandlers() {
+        return languageHandlers;
     }
 
-    public RequestResponseHandler getRequestResponseHandler() {
-        return requestResponseHandler;
+    public void setLanguageHandlers(Map<String, LanguageHandler> languageHandlers) {
+        this.languageHandlers = languageHandlers;
+    }
+
+    public String getDefaultContentType() {
+        return defaultContentType;
+    }
+
+    public void setDefaultContentType(String defaultContentType) {
+        this.defaultContentType = defaultContentType;
     }
 }

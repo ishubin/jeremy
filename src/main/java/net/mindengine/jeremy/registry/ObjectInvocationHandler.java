@@ -1,9 +1,6 @@
 package net.mindengine.jeremy.registry;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -14,21 +11,21 @@ import net.mindengine.jeremy.bin.Binary;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
-import net.mindengine.jeremy.messaging.RequestResponseHandler;
+import net.mindengine.jeremy.messaging.LanguageHandler;
 
 public class ObjectInvocationHandler implements InvocationHandler {
 
     private Client client;
-    private RequestResponseHandler requestResponseHandler;
     private String urlToRemoteObject;
     private String url;
+    private Lookup lookup;
 
     public static Object createProxyRemoteObject(String url, String objectName, Class<?> interfaceClass, Client client,
-            RequestResponseHandler requestResponseHandler) {
+            Lookup lookup) {
         ObjectInvocationHandler objectInvocationHandler = new ObjectInvocationHandler();
         objectInvocationHandler.setClient(client);
         objectInvocationHandler.setUrl(url);
-        objectInvocationHandler.setRequestResponseHandler(requestResponseHandler);
+        objectInvocationHandler.setLookup(lookup);
         objectInvocationHandler.setUrlToRemoteObject(url + "/" + objectName);
         Object object = Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[] { interfaceClass },
                 objectInvocationHandler);
@@ -48,18 +45,17 @@ public class ObjectInvocationHandler implements InvocationHandler {
         // Serializing remote method arguments
         int i = 0;
         Map<String, String> params = new HashMap<String, String>();
+        LanguageHandler languageHandler = lookup.getLanguageHandler(lookup.getDefaultContentType());
         if (args != null) {
             for (Object argument : args) {
 
                 if (argument != null && Binary.class.isAssignableFrom(argument.getClass())) {
-                    ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
-                    ObjectOutputStream out = new ObjectOutputStream(bos) ;
-                    out.writeObject(object);
-                    out.close();
+                    //Serializing argument to binary data
+                    byte[]bytes = lookup.getLanguageHandler(Client.APPLICATION_BINARY).serializeResponseToBytes(argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bos.toByteArray()));
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes));
                     if(response.getStatus()<400) {
-                        Map<String, String> map = (Map<String, String>) requestResponseHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
+                        Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
                         if(key==null) {
                             throw new ConnectionError("Cannot find key for the uploaded binary object");
@@ -69,7 +65,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     else throw new ConnectionError("Cannot upload binary object for remote method argument");
                     
                 } else {
-                    params.put("arg" + i, requestResponseHandler.serializeResponse(argument));
+                    params.put("arg" + i, languageHandler.serializeResponse(argument));
                 }
                 i++;
             }
@@ -79,15 +75,13 @@ public class ObjectInvocationHandler implements InvocationHandler {
 
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
-                
+               
                 
                 if(response.getContentType().equals(Client.APPLICATION_BINARY)) {
-                    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(response.getBytes()));
-                    return ois.readObject();
+                    return languageHandler.deserializeObject(response.getBytes(), method.getReturnType());
                 }
                 else {
-                    //TODO change this to multiple deserializers handling
-                    return requestResponseHandler.deserializeObject(response.getContent(), method.getReturnType());
+                    return languageHandler.deserializeObject(response.getContent(), method.getReturnType());
                 }
             } else
                 return null;
@@ -106,13 +100,6 @@ public class ObjectInvocationHandler implements InvocationHandler {
         return client;
     }
 
-    public void setRequestResponseHandler(RequestResponseHandler requestResponseHandler) {
-        this.requestResponseHandler = requestResponseHandler;
-    }
-
-    public RequestResponseHandler getRequestResponseHandler() {
-        return requestResponseHandler;
-    }
 
     public void setUrlToRemoteObject(String urlToRemoteObject) {
         this.urlToRemoteObject = urlToRemoteObject;
@@ -128,6 +115,15 @@ public class ObjectInvocationHandler implements InvocationHandler {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+
+    public Lookup getLookup() {
+        return lookup;
+    }
+
+    public void setLookup(Lookup lookup) {
+        this.lookup = lookup;
     }
 
 }
