@@ -31,6 +31,18 @@ public class ObjectInvocationHandler implements InvocationHandler {
                 objectInvocationHandler);
         return object;
     }
+    
+    public Map<String, String> generateHttpHeaders() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put(Client.LANGUAGE_HEADER, lookup.getDefaultLanguage());
+        return headers;
+    }
+    
+    public Map<String, String> generateHttpHeadersForBinaryRequest() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_BINARY);
+        return headers;
+    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -45,7 +57,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
         // Serializing remote method arguments
         int i = 0;
         Map<String, String> params = new HashMap<String, String>();
-        LanguageHandler languageHandler = lookup.getLanguageHandler(lookup.getDefaultContentType());
+        LanguageHandler languageHandler = lookup.getLanguageHandler(lookup.getDefaultLanguage());
         if (args != null) {
             for (Object argument : args) {
 
@@ -53,7 +65,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     //Serializing argument to binary data
                     byte[]bytes = lookup.getLanguageHandler(Client.APPLICATION_BINARY).serializeResponseToBytes(argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes));
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeadersForBinaryRequest());
                     if(response.getStatus()<400) {
                         Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
@@ -71,13 +83,13 @@ public class ObjectInvocationHandler implements InvocationHandler {
             }
         }
 
-        HttpResponse response = client.postRequest(fullUrl, params);
+        HttpResponse response = client.postRequest(fullUrl, params, generateHttpHeaders());
 
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
                
                 
-                if(response.getContentType().equals(Client.APPLICATION_BINARY)) {
+                if(response.getLanguage().equals(Client.APPLICATION_BINARY)) {
                     return languageHandler.deserializeObject(response.getBytes(), method.getReturnType());
                 }
                 else {

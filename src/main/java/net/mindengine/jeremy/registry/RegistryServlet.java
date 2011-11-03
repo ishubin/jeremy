@@ -1,7 +1,5 @@
 package net.mindengine.jeremy.registry;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -67,7 +65,7 @@ public class RegistryServlet extends HttpServlet {
                 }
             }
             else if (uri.equals("/~bin")) {
-                output = uploadBinaryFile(request);
+                output = uploadBinaryObject(request);
             }
             else if(uri.matches("/.*/.*")) {
               output = invokeRemoteMethod(uri, request);
@@ -108,7 +106,7 @@ public class RegistryServlet extends HttpServlet {
         LanguageHandler languageHandler = registry.getLanguageHandler(Client.APPLICATION_BINARY);
         
         byte[] bytes = languageHandler.serializeResponseToBytes(object);
-        response.setContentType(Client.APPLICATION_BINARY);
+        response.addHeader(Client.LANGUAGE_HEADER, Client.APPLICATION_BINARY);
         OutputStream os = response.getOutputStream();
         os.write(bytes);
         os.close();
@@ -119,15 +117,8 @@ public class RegistryServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
         
         //Will use the same language in response as in request
-        String contentType = request.getContentType();
-        LanguageHandler languageHandler = null;
-        if(contentType!=null && registry.getLanguageHandlers().containsKey(contentType)) {
-            languageHandler = registry.getLanguageHandlers().get(contentType);
-        }
-        else {
-            //In case if there is no registered language handler will use default one
-            languageHandler = registry.getLanguageHandlers().get(registry.getDefaultContentType());
-        }
+        LanguageHandler languageHandler = registry.getLanguageHandler(request.getHeader(Client.LANGUAGE_HEADER));
+        
         
         String body = languageHandler.serializeResponse(output);
         if(output instanceof Throwable) {
@@ -143,7 +134,7 @@ public class RegistryServlet extends HttpServlet {
             response.setStatus(200);
             out.print(body);
         }
-        response.setContentType(languageHandler.getMimeType());
+        response.addHeader(Client.LANGUAGE_HEADER, languageHandler.getMimeType());
         out.flush();
         out.close();
     }
@@ -182,7 +173,7 @@ public class RegistryServlet extends HttpServlet {
                         }
                     }
                     else {
-                        LanguageHandler languageHandler = registry.getLanguageHandler(request.getContentType());
+                        LanguageHandler languageHandler = registry.getLanguageHandler(request.getHeader(Client.LANGUAGE_HEADER));
                         arguments[i] = languageHandler.deserializeObject(parameter, parameterTypes[i]);
                     }
                 }
@@ -195,7 +186,7 @@ public class RegistryServlet extends HttpServlet {
 
 
     @SuppressWarnings("unchecked")
-    private Map<String, String> uploadBinaryFile(HttpServletRequest request) throws FileUploadException, DeserializationException {
+    private Map<String, String> uploadBinaryObject(HttpServletRequest request) throws FileUploadException, DeserializationException {
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         List<FileItem> files = upload.parseRequest(request);
         

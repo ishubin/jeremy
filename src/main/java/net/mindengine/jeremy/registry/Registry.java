@@ -33,10 +33,10 @@ public class Registry {
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
     
     
-    private String defaultContentType = Client.APPLICATION_BINARY;
+    private String defaultLanguage = Client.APPLICATION_BINARY;
     
-    public void addLanguageHandler(String contentType, LanguageHandler languageHandler) {
-        this.languageHandlers.put(contentType, languageHandler);
+    public void addLanguageHandler(String language, LanguageHandler languageHandler) {
+        this.languageHandlers.put(language, languageHandler);
     }
     
     
@@ -84,7 +84,7 @@ public class Registry {
         if(contentType!=null && languageHandlers.containsKey(contentType)) {
             return languageHandlers.get(contentType);
         }
-        else return languageHandlers.get(defaultContentType);
+        else return languageHandlers.get(defaultLanguage);
     }
     
     public void addObject(String name, Remote remoteObject) {
@@ -153,12 +153,12 @@ public class Registry {
         return remoteObjects;
     }
 
-    public String getDefaultContentType() {
-        return defaultContentType;
+    public String getDefaultLanguage() {
+        return defaultLanguage;
     }
 
-    public void setDefaultContentType(String defaultContentType) {
-        this.defaultContentType = defaultContentType;
+    public void setDefaultLanguage(String defaultContentType) {
+        this.defaultLanguage = defaultContentType;
     }
 
     public Map<String, LanguageHandler> getLanguageHandlers() {

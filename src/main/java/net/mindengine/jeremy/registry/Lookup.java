@@ -17,7 +17,7 @@ public class Lookup {
     private String url;
     private Client client;
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
-    private String defaultContentType = Client.APPLICATION_BINARY;
+    private String defaultLanguage = Client.APPLICATION_BINARY;
     private Map<String, Map<Class<?>, Object>> cashedRemoteObjects = new HashMap<String, Map<Class<?>, Object>>();
     
     public Lookup() {
@@ -63,7 +63,13 @@ public class Lookup {
         if(contentType!=null && languageHandlers.containsKey(contentType)){
             return languageHandlers.get(contentType);
         }
-        else return languageHandlers.get(defaultContentType);
+        else return languageHandlers.get(defaultLanguage);
+    }
+    
+    public Map<String, String> generateHttpHeaders() {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Content-Type", getDefaultLanguage());
+        return headers;
     }
     
     @SuppressWarnings("unchecked")
@@ -75,7 +81,7 @@ public class Lookup {
             return (T) objectFromCache;
         }
         
-        LanguageHandler languageHandler = getLanguageHandler(defaultContentType);
+        LanguageHandler languageHandler = getLanguageHandler(defaultLanguage);
         
         if(client==null) {
             client = new Client();
@@ -85,8 +91,7 @@ public class Lookup {
             throw new IllegalArgumentException("Cannot create a remote object with "+interfaceClass.getName()+". Should support "+Remote.class.getName()+" interface");
         
         try {
-            //TODO send content-type to server
-            HttpResponse httpResponse  = client.getRequest(url+"/"+objectName+"/~", null);
+            HttpResponse httpResponse  = client.getRequest(url+"/"+objectName+"/~", null, generateHttpHeaders());
             if(httpResponse.getStatus()<=300) {
                 
                 String[] remoteMethods = (String[]) languageHandler.deserializeObject(httpResponse.getContent(), String[].class);
@@ -137,11 +142,11 @@ public class Lookup {
         this.languageHandlers = languageHandlers;
     }
 
-    public String getDefaultContentType() {
-        return defaultContentType;
+    public String getDefaultLanguage() {
+        return defaultLanguage;
     }
 
-    public void setDefaultContentType(String defaultContentType) {
-        this.defaultContentType = defaultContentType;
+    public void setDefaultLanguage(String defaultContentType) {
+        this.defaultLanguage = defaultContentType;
     }
 }

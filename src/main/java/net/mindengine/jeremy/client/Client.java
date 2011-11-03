@@ -30,11 +30,9 @@ import javax.net.ssl.X509TrustManager;
 public class Client {
     
     private int maxBufferSize = 1024;
-    private Map<String, String> httpHeaders = new HashMap<String, String>();
-    
     public static final String APPLICATION_BINARY = "application/binary".intern();
     public static final String APPLICATION_JSON = "application/json".intern();
-    
+    public static final String LANGUAGE_HEADER = "x-language".intern();
     
     /**
      * Send GET or POST request
@@ -43,7 +41,7 @@ public class Client {
      * @param post If true - POST request will be sent, otherwise - GET
      * @return
      */
-    private HttpResponse sendRequest(String targetUrl, Map<String, String> httpParams, boolean post)throws KeyManagementException, NoSuchAlgorithmException, IOException  {
+    private HttpResponse sendRequest(String targetUrl, Map<String, String> httpParams, boolean post, Map<String, String> httpHeaders)throws KeyManagementException, NoSuchAlgorithmException, IOException  {
         if(targetUrl.startsWith("https")) {
             SSLContext ctx = SSLContext.getInstance("TLS");
             ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
@@ -68,18 +66,21 @@ public class Client {
             connection.setRequestMethod("POST");
         }
         else connection.setRequestMethod("GET");
-
-        if(httpHeaders!=null) {
-            for(Map.Entry<String, String> header : httpHeaders.entrySet()) {
-                connection.setRequestProperty(header.getKey(), header.getValue());
-            }
-        }
+        connection.setRequestMethod("GET");
+        
         
         connection.setUseCaches(false);
         connection.setDoOutput(true);
         connection.setDoInput(true);
         connection.setRequestProperty("Connection", "Keep-Alive");
         connection.setRequestProperty("Content-Language", "en-US");
+        
+        if(httpHeaders!=null) {
+            for(Map.Entry<String, String>header : httpHeaders.entrySet()){
+                connection.addRequestProperty(header.getKey(), header.getValue());
+            }
+        }
+        
         connection.setDoInput(true);
 
         // Send request
@@ -114,9 +115,13 @@ public class Client {
         HttpResponse response = new HttpResponse();
         response.setUrl(targetUrl);
         response.setStatus(connection.getResponseCode());
-        response.setContentType(connection.getContentType());
+        response.setHeaders(collectResponseHeaders(connection));
+        response.setLanguage(response.getHeaders().get(Client.LANGUAGE_HEADER));
         
-        if(connection.getContentType().equals(APPLICATION_BINARY)) {
+        
+        String responseLanguage = connection.getHeaderField(Client.LANGUAGE_HEADER);
+        
+        if(APPLICATION_BINARY.equals(responseLanguage)) {
             // Reading binary response
             ByteArrayOutputStream bous = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];
@@ -147,7 +152,7 @@ public class Client {
         os.write(text.getBytes());
     }
     
-    public HttpResponse sendMultiPartBinaryRequest(String targetUrl, String name, InputStream inputStream) throws KeyManagementException, NoSuchAlgorithmException, IOException {
+    public HttpResponse sendMultiPartBinaryRequest(String targetUrl, String name, InputStream inputStream, Map<String, String> httpHeaders) throws KeyManagementException, NoSuchAlgorithmException, IOException {
         if(targetUrl.startsWith("https")) {
             SSLContext ctx = SSLContext.getInstance("TLS");
             ctx.init(new KeyManager[0], new TrustManager[] { new DefaultTrustManager() }, new SecureRandom());
@@ -236,15 +241,33 @@ public class Client {
         HttpResponse response = new HttpResponse();
         response.setContent(buff.toString());
         response.setStatus(connection.getResponseCode());
-        response.setContentType(connection.getContentType());
+        response.setHeaders(collectResponseHeaders(connection));
+        response.setLanguage(response.getHeaders().get(Client.LANGUAGE_HEADER));
         return response;
     }
     
-    public HttpResponse postRequest(String targetUrl, Map<String, String> httpParams) throws KeyManagementException, NoSuchAlgorithmException, IOException {
-        return sendRequest(targetUrl, httpParams, true);
+    private Map<String, String> collectResponseHeaders(HttpURLConnection connection) {
+        Map<String, String> headers = new HashMap<String, String>();
+        for (int i=0;i<10000; i++) {
+            String headerName = connection.getHeaderFieldKey(i);
+            String headerValue = connection.getHeaderField(i);
+            
+            if (headerName == null && headerValue == null) {
+                // No more headers
+                break;
+            }
+            if (headerName != null) {
+                headers.put(headerName, headerValue);
+            }
+        }
+        return headers;
+    }
+
+    public HttpResponse postRequest(String targetUrl, Map<String, String> httpParams, Map<String, String> httpHeaders) throws KeyManagementException, NoSuchAlgorithmException, IOException {
+        return sendRequest(targetUrl, httpParams, true, httpHeaders);
     }
     
-    public HttpResponse getRequest(String targetUrl, Map<String, String> httpParams) throws KeyManagementException, NoSuchAlgorithmException, IOException {
+    public HttpResponse getRequest(String targetUrl, Map<String, String> httpParams, Map<String, String> httpHeaders) throws KeyManagementException, NoSuchAlgorithmException, IOException {
         if(httpParams!=null) {
             if(targetUrl.contains("?")) {
                 targetUrl+="&";
@@ -260,7 +283,7 @@ public class Client {
                 amp = true;
             }
         }
-        return sendRequest(targetUrl, httpParams, false);
+        return sendRequest(targetUrl, httpParams, false, httpHeaders);
     }
     
     private static class DefaultTrustManager implements X509TrustManager {
@@ -288,11 +311,4 @@ public class Client {
         return maxBufferSize;
     }
 
-    public void setHttpHeaders(Map<String, String> httpHeaders) {
-        this.httpHeaders = httpHeaders;
-    }
-
-    public Map<String, String> getHttpHeaders() {
-        return httpHeaders;
-    }
 }
