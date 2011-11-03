@@ -38,11 +38,6 @@ public class ObjectInvocationHandler implements InvocationHandler {
         return headers;
     }
     
-    public Map<String, String> generateHttpHeadersForBinaryRequest() {
-        Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_BINARY);
-        return headers;
-    }
 
     @SuppressWarnings("unchecked")
     @Override
@@ -65,7 +60,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     //Serializing argument to binary data
                     byte[]bytes = lookup.getLanguageHandler(Client.APPLICATION_BINARY).serializeResponseToBytes(argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeadersForBinaryRequest());
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders());
                     if(response.getStatus()<400) {
                         Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
@@ -84,23 +79,35 @@ public class ObjectInvocationHandler implements InvocationHandler {
         }
 
         HttpResponse response = client.postRequest(fullUrl, params, generateHttpHeaders());
-
+        
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
-               
                 
-                if(response.getLanguage().equals(Client.APPLICATION_BINARY)) {
-                    return languageHandler.deserializeObject(response.getBytes(), method.getReturnType());
+                LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
+                if(response.getBytes()!=null) {
+                    return returnLanguageHandler.deserializeObject(response.getBytes(), method.getReturnType());
                 }
-                else {
-                    return languageHandler.deserializeObject(response.getContent(), method.getReturnType());
-                }
+                else return returnLanguageHandler.deserializeObject(response.getContent(), method.getReturnType());
             } else
                 return null;
         } 
         else {
-            // TODO handle remote exceptions
-            throw new RuntimeException("Something is wrong:" + response.getContent());
+            //Trying to deserialize exception
+            
+            String errorClassName = response.getHeaders().get(Client.ERROR_TYPE_HEADER);
+            if(errorClassName!=null) {
+                LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
+                
+                Class<?>errorClass = Class.forName(errorClassName);
+                
+                Throwable throwable = null;
+                if(response.getBytes()!=null) {
+                    throwable = (Throwable) returnLanguageHandler.deserializeObject(response.getBytes(), errorClass);
+                }
+                else throwable = (Throwable) returnLanguageHandler.deserializeObject(response.getContent(), errorClass);
+                throw throwable;
+            }
+            else throw new RuntimeException("Cannot process remote error");
         }
     }
 

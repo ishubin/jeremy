@@ -11,4 +11,6 @@ public interface MyRemoteInterface extends Remote {
     public SerialObject getSerialObject();
     
     public void setSerialObject(SerialObject serialObject);
+    
+    public void someTestMethod();
 }

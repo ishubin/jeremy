@@ -24,6 +24,7 @@ import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
 import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
 import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
+import net.mindengine.jeremy.objects.MyAnotherRemoteInterface;
 import net.mindengine.jeremy.objects.MyObject;
 import net.mindengine.jeremy.objects.MyRemoteInterface;
 import net.mindengine.jeremy.objects.SerialObject;
@@ -219,8 +220,44 @@ public class RegistryIntegrationTest {
     
     
     @Test
-    public void shouldSendBinaryObjectAlongWithRemoteMethodInvocation() {
-        //TODO implement this test
+    public void shouldSendBinaryObjectAlongWithRemoteMethodInvocation() throws IOException, URISyntaxException, RemoteObjectIsNotFoundException, ConnectionError {
+      //Creating proxy for remote object
+        MyAnotherRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyAnotherRemoteInterface.class);
+        
+        //Invoking remote method.
+        RemoteFile file = new RemoteFile(new File(getClass().getResource("/test-file.png").toURI()));
+        
+        assertNotNull(file.getBytes());
+        assertTrue(file.getBytes().length>0);
+        
+        remoteInterface.uploadFile(file);
+        
+        RemoteFile file2 = remoteInterface.downloadFile();
+        assertNotNull(file2);
+        assertNotNull(file2.getBytes());
+        
+        assertEquals(file.getBytes().length, file2.getBytes().length);
+        
+        for(int i=0;i<file.getBytes().length; i++) {
+            assertEquals(file.getBytes()[i], file2.getBytes()[i]);
+        }
+    }
+    
+    @Test
+    public void remoteMethodShouldBeAbleToThrowExceptions() throws RemoteObjectIsNotFoundException, ConnectionError {
+      //Creating proxy for remote object
+        MyRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyRemoteInterface.class);
+        
+        Exception exception = null;
+        try {
+            remoteInterface.someTestMethod();
+        }
+        catch (Exception e) {
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertEquals(NullPointerException.class, exception.getClass());
+        assertEquals("Some test message", exception.getMessage());
     }
     
     private static void assertContains(Object[]array, Object value) {

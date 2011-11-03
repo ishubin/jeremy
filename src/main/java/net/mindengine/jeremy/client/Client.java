@@ -33,7 +33,7 @@ public class Client {
     public static final String APPLICATION_BINARY = "application/binary".intern();
     public static final String APPLICATION_JSON = "application/json".intern();
     public static final String LANGUAGE_HEADER = "x-language".intern();
-    
+    public static final String ERROR_TYPE_HEADER = "x-error-type".intern();
     /**
      * Send GET or POST request
      * @param targetUrl

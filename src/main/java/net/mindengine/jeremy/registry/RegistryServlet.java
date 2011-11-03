@@ -79,8 +79,9 @@ public class RegistryServlet extends HttpServlet {
                 return;
             }
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             output = e;
+            response.addHeader(Client.ERROR_TYPE_HEADER, e.getClass().getName());
             e.printStackTrace();
         }
         
@@ -123,23 +124,17 @@ public class RegistryServlet extends HttpServlet {
         String body = languageHandler.serializeResponse(output);
         if(output instanceof Throwable) {
             response.setStatus(400);
-            Throwable error = (Throwable) output;
-            
-            RemoteExceptionWrapper remoteException = new RemoteExceptionWrapper();
-            remoteException.setType(error.getClass().getName());
-            remoteException.setError(error);
-            out.print(languageHandler.serializeResponse(remoteException));
         }
         else {
             response.setStatus(200);
-            out.print(body);
         }
+        out.print(body);
         response.addHeader(Client.LANGUAGE_HEADER, languageHandler.getMimeType());
         out.flush();
         out.close();
     }
     
-    private Object invokeRemoteMethod(String uri, HttpServletRequest request) throws RemoteObjectIsNotFoundException, DeserializationException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+    private Object invokeRemoteMethod(String uri, HttpServletRequest request) throws Throwable {
         Pattern pattern = Pattern.compile("/(.*?)/(.*?)/");
         Matcher m = pattern.matcher(uri+"/");
         while (m.find()) {
@@ -179,7 +174,12 @@ public class RegistryServlet extends HttpServlet {
                 }
                 else arguments[i] = null;
             }
-            return method.invoke(remoteObject.getObject(), arguments);
+            try {
+                return method.invoke(remoteObject.getObject(), arguments);
+            }
+            catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
         }
         throw new IllegalArgumentException("Cannot find name of object and remote method in URL");
     }

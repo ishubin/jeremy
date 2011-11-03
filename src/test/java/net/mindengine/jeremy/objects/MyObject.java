@@ -52,5 +52,9 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
     public RemoteFile downloadFile() {
         return this.file;
     }
-
+    
+    @Override
+    public void someTestMethod() {
+        throw new NullPointerException("Some test message");
+    }
 }
