@@ -26,6 +26,7 @@ public class Registry {
     private Map<String, RemoteObject> remoteObjects = new ConcurrentHashMap<String, RemoteObject>();
     private RegistryServlet servlet;
     private Cache objectCache;
+    private int port = 80;
     
     /**
      * Map of language-handlers with Content-Type as a key.
@@ -49,7 +50,7 @@ public class Registry {
         server = new Server();
         
         Connector connector = new SelectChannelConnector();
-        connector.setPort(8085);
+        connector.setPort(port);
 
         server.addConnector(connector);
 
@@ -175,6 +176,16 @@ public class Registry {
 
     public void setObjectCache(Cache objectCache) {
         this.objectCache = objectCache;
+    }
+
+
+    public int getPort() {
+        return port;
+    }
+
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
 

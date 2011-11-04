@@ -44,6 +44,7 @@ public class RegistryIntegrationTest {
     private static RegistryStarter registryStarter;
     private static MyObject myObject;
     
+    
     private static final String url = "http://localhost:8085";
     
     private static Lookup lookup = new Lookup(url);
@@ -57,6 +58,7 @@ public class RegistryIntegrationTest {
         myObject = new MyObject();
         registry.addObject("myObject", myObject);
         registry.addObject("myObject2", new MyObject());
+        registry.setPort(8085);
         
         registryStarter.setRegistry(registry);
         registryStarter.startRegistry();
@@ -108,7 +110,7 @@ public class RegistryIntegrationTest {
         ObjectMapper mapper = new ObjectMapper();
         String[] objects = mapper.readValue(response.getContent(), String[].class);
         assertNotNull(objects);
-        assertEquals(8, objects.length);
+        assertEquals(9, objects.length);
         assertContains(objects, "getName");
         assertContains(objects, "getId");
         assertContains(objects, "setName");
@@ -117,6 +119,7 @@ public class RegistryIntegrationTest {
         assertContains(objects, "downloadFile");
         assertContains(objects, "setSerialObject");
         assertContains(objects, "getSerialObject");
+        assertContains(objects, "someTestMethod");
     }
     
     @Test
