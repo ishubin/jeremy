@@ -1,6 +1,6 @@
 package net.mindengine.jeremy.test.performance;
 
-public interface Executor {
+public interface Executor<T> {
 
-    public void execute(Object object);
+    public void execute(T object) throws Exception;
 }
