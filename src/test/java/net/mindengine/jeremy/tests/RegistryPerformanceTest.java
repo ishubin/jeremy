@@ -1,3 +1,21 @@
+/*******************************************************************************
+ * 2011 Ivan Shubin http://mindengine.net
+ * 
+ * This file is part of Mind-Engine Jeremy.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Mind-Engine Jeremy.  If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
 package net.mindengine.jeremy.tests;
 
 import static org.junit.Assert.assertEquals;
@@ -11,6 +29,7 @@ import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Properties;
 
+import net.mindengine.jeremy.bin.RemoteFile;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
@@ -74,6 +93,47 @@ public class RegistryPerformanceTest {
         registryStarter.stopRegistry();
     }
     
+    @Test
+    public void testRemoteObjectLookup()  throws RemoteObjectIsNotFoundException, ConnectionError, InterruptedException{
+        ThreadContainer<Integer> tc = new ThreadContainer<Integer>();
+        
+        tc.setExecutor(new Executor<Integer>() {
+            @Override
+            public void execute(Integer object) throws RemoteObjectIsNotFoundException, ConnectionError {
+                PerformanceObjectInterface poi = lookup.getRemoteObject("remoteObject", PerformanceObjectInterface.class);
+                if(poi==null) {
+                    throw new NullPointerException("Remote Object is null");
+                }
+            }
+        });
+        
+        for(int i=0;i<threadsAmount; i++) {
+            tc.addObject((Integer)i);
+        }
+        
+        final long[] timeMarks = new long[2];
+        
+        tc.setListener(new Listener() {
+            
+            @Override
+            public void onStop() {
+                timeMarks[1] = new Date().getTime();
+            }
+            
+            @Override
+            public void onStart() {
+                timeMarks[0] = new Date().getTime();
+            }
+        });
+        
+        tc.startAllThreads();
+        printInfo(tc, timeMarks);
+        
+        long time = timeMarks[1] - timeMarks[0];
+        
+        assertEquals(threadsAmount, tc.getThreadsCompleted());
+        assertTrue(time<6000);
+    }
     
     @Test
     public void testRemoteMethodExecution() throws RemoteObjectIsNotFoundException, ConnectionError, InterruptedException {
@@ -105,9 +165,59 @@ public class RegistryPerformanceTest {
             }
         });
         
-        System.out.println("start");
         tc.startAllThreads();
-        System.out.println("\nend");
+        printInfo(tc, timeMarks);
+        
+        long time = timeMarks[1] - timeMarks[0];
+        
+        assertEquals(threadsAmount, tc.getThreadsCompleted());
+        assertTrue(time<11000);
+        //Verifying that the remote method was actually invoked on server
+        assertEquals(threadsAmount, remoteObject.getExecuteSimpleMethodCount());
+    }
+    
+    @Test
+    public void testRemoteMethodWithFileSending() throws RemoteObjectIsNotFoundException, ConnectionError, InterruptedException {
+        
+        ThreadContainer<PerformanceObjectInterface> tc = new ThreadContainer<PerformanceObjectInterface>();
+        tc.setExecutor(new Executor<PerformanceObjectInterface>() {
+            @Override
+            public void execute(PerformanceObjectInterface object) throws InterruptedException, IOException, URISyntaxException {
+                object.executeMethodWithBinaries(new RemoteFile(new File(getClass().getResource("/test-file.png").toURI())));
+            }
+        });
+        
+        for(int i=0;i<threadsAmount; i++) {
+            tc.addObject(lookup.getRemoteObject("remoteObject", PerformanceObjectInterface.class));
+        }
+        
+        final long[] timeMarks = new long[2];
+        
+        tc.setListener(new Listener() {
+            
+            @Override
+            public void onStop() {
+                timeMarks[1] = new Date().getTime();
+            }
+            
+            @Override
+            public void onStart() {
+                timeMarks[0] = new Date().getTime();
+            }
+        });
+        
+        tc.startAllThreads();
+        printInfo(tc, timeMarks);
+        
+        long time = timeMarks[1] - timeMarks[0];
+        
+        assertEquals(threadsAmount, tc.getThreadsCompleted());
+        assertTrue(time<11000);
+        //Verifying that the remote method was actually invoked on server
+        assertEquals(threadsAmount, remoteObject.getExecuteMethodWithBinaries());
+    }
+    
+    private void printInfo(ThreadContainer<?> tc, long[]timeMarks) {
         System.out.println("Time = "+(timeMarks[1] - timeMarks[0]));
         System.out.println("Total threads = "+(timeMarks[1] - timeMarks[0]));
         System.out.println("  > Completed = "+tc.getThreadsCompleted());
@@ -115,11 +225,5 @@ public class RegistryPerformanceTest {
         System.out.println("  > Not started = "+tc.getThreadsNotStarted());
         System.out.println("  > Hanging = "+tc.getThreadsRunning());
         
-        long time = timeMarks[1] - timeMarks[0];
-        
-        assertEquals(threadsAmount, tc.getThreadsCompleted());
-        assertTrue(time<11000);
-        assertEquals(threadsAmount, remoteObject.getExecuteSimpleMethodCount());
-        //TODO verify that on server there were all calls
     }
 }
