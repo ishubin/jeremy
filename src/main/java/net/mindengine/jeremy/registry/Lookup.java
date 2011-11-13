@@ -16,10 +16,11 @@
 package net.mindengine.jeremy.registry;
 
 import java.lang.reflect.Method;
+import java.rmi.Remote;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.mindengine.jeremy.Remote;
+
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;

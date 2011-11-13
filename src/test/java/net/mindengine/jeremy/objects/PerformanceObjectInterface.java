@@ -15,7 +15,8 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
-import net.mindengine.jeremy.Remote;
+import java.rmi.Remote;
+
 import net.mindengine.jeremy.bin.RemoteFile;
 
 public interface PerformanceObjectInterface extends Remote {

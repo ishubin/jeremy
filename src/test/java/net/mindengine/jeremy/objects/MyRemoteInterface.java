@@ -15,7 +15,7 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
-import net.mindengine.jeremy.Remote;
+import java.rmi.Remote;
 
 public interface MyRemoteInterface extends Remote {
 

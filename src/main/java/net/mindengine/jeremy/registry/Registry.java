@@ -16,13 +16,13 @@
 package net.mindengine.jeremy.registry;
 
 import java.lang.reflect.Method;
+import java.rmi.Remote;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.mindengine.jeremy.Remote;
 import net.mindengine.jeremy.cache.Cache;
 import net.mindengine.jeremy.cache.DefaultCache;
 import net.mindengine.jeremy.client.Client;

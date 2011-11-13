@@ -15,7 +15,8 @@
  ******************************************************************************/
 package net.mindengine.jeremy.tests;
 
-import net.mindengine.jeremy.Remote;
+import java.rmi.Remote;
+
 import net.mindengine.jeremy.registry.Registry;
 
 import org.junit.Test;
