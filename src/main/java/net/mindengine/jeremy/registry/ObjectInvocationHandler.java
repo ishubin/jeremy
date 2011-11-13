@@ -73,7 +73,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
 
                 if (argument != null && Binary.class.isAssignableFrom(argument.getClass())) {
                     //Serializing argument to binary data
-                    byte[]bytes = lookup.getLanguageHandler(Client.APPLICATION_BINARY).serializeResponseToBytes(argument);
+                    byte[]bytes = lookup.getLanguageHandler(Client.LANGUAGE_BINARY).serializeResponseToBytes(argument);
                     
                     HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders());
                     if(response.getStatus()<400) {

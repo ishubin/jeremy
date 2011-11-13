@@ -33,7 +33,7 @@ public class Lookup {
     private String url;
     private Client client;
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
-    private String defaultLanguage = Client.APPLICATION_BINARY;
+    private String defaultLanguage = Client.LANGUAGE_BINARY;
     private Map<String, Map<Class<?>, Object>> cashedRemoteObjects = new HashMap<String, Map<Class<?>, Object>>();
     
     public Lookup() {

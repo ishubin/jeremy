@@ -67,8 +67,8 @@ public class RegistryIntegrationTest {
     public static void initializeRegistry() throws InterruptedException {
         registryStarter = new RegistryStarter();
         Registry registry = new Registry();
-        registry.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
-        registry.setDefaultLanguage(Client.APPLICATION_JSON);
+        registry.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
+        registry.setDefaultLanguage(Client.LANGUAGE_JSON);
         
         myObject = new MyObject();
         registry.addObject("myObject", myObject);
@@ -80,9 +80,9 @@ public class RegistryIntegrationTest {
         Thread.sleep(2000);
         
         lookup = new Lookup(url);
-        lookup.setDefaultLanguage(Client.APPLICATION_JSON);
-        lookup.addLanguageHandler(Client.APPLICATION_BINARY, new DefaultBinaryLanguageHandler());
-        lookup.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
+        lookup.setDefaultLanguage(Client.LANGUAGE_JSON);
+        lookup.addLanguageHandler(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
+        lookup.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
     }
     
     @AfterClass
@@ -95,7 +95,7 @@ public class RegistryIntegrationTest {
         Client client = new Client();
         
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_JSON);
+        headers.put(Client.LANGUAGE_HEADER, Client.LANGUAGE_JSON);
         HttpResponse response = client.getRequest(url+"/~", null, headers);
         
         assertEquals(200, response.getStatus());
@@ -116,7 +116,7 @@ public class RegistryIntegrationTest {
         Client client = new Client();
         
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_JSON);
+        headers.put(Client.LANGUAGE_HEADER, Client.LANGUAGE_JSON);
         HttpResponse response = client.getRequest(url+"/myObject/~", null, headers);
         
         assertEquals(200, response.getStatus());
@@ -141,7 +141,7 @@ public class RegistryIntegrationTest {
     public void shouldReturnRemoteMethodMetadata1() throws InterruptedException, KeyManagementException, NoSuchAlgorithmException, IOException {
         Client client = new Client();
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_JSON);
+        headers.put(Client.LANGUAGE_HEADER, Client.LANGUAGE_JSON);
         HttpResponse response = client.getRequest(url+"/myObject/setName/~", null, headers);
         
         assertEquals(200, response.getStatus());
@@ -169,7 +169,7 @@ public class RegistryIntegrationTest {
         out.close();
         
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, Client.APPLICATION_JSON);
+        headers.put(Client.LANGUAGE_HEADER, Client.LANGUAGE_JSON);
         HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~bin", "myCustomParamName", new ByteArrayInputStream(bos.toByteArray()), headers);
         ObjectMapper mapper = new ObjectMapper();
         String content = response.getContent();

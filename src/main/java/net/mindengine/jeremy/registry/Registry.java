@@ -49,7 +49,7 @@ public class Registry {
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
     
     
-    private String defaultLanguage = Client.APPLICATION_BINARY;
+    private String defaultLanguage = Client.LANGUAGE_BINARY;
     
     public void addLanguageHandler(String language, LanguageHandler languageHandler) {
         this.languageHandlers.put(language, languageHandler);
@@ -74,8 +74,8 @@ public class Registry {
         servlet = new RegistryServlet();
         servlet.setRegistry(this);
         
-        if(!getLanguageHandlers().containsKey(Client.APPLICATION_BINARY)) {
-            getLanguageHandlers().put(Client.APPLICATION_BINARY, new DefaultBinaryLanguageHandler());
+        if(!getLanguageHandlers().containsKey(Client.LANGUAGE_BINARY)) {
+            getLanguageHandlers().put(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
         }
         
         holder.setServlet(servlet);

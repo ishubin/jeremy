@@ -48,7 +48,7 @@ public class DefaultBinaryLanguageHandler implements LanguageHandler {
 
     @Override
     public String getMimeType() {
-        return Client.APPLICATION_BINARY;
+        return Client.LANGUAGE_BINARY;
     }
 
     @Override

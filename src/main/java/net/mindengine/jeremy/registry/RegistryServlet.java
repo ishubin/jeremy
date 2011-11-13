@@ -119,10 +119,10 @@ public class RegistryServlet extends HttpServlet {
     
     
     private void printBinaryObjectToResponse(Object object, HttpServletResponse response) throws IOException, SerializationException {
-        LanguageHandler languageHandler = registry.getLanguageHandler(Client.APPLICATION_BINARY);
+        LanguageHandler languageHandler = registry.getLanguageHandler(Client.LANGUAGE_BINARY);
         
         byte[] bytes = languageHandler.serializeResponseToBytes(object);
-        response.addHeader(Client.LANGUAGE_HEADER, Client.APPLICATION_BINARY);
+        response.addHeader(Client.LANGUAGE_HEADER, Client.LANGUAGE_BINARY);
         OutputStream os = response.getOutputStream();
         os.write(bytes);
         os.close();
@@ -211,9 +211,9 @@ public class RegistryServlet extends HttpServlet {
                 byte[] content = fileItem.get();
                 
                 //Looking for binary language-handler in registry
-                LanguageHandler languageHandler = registry.getLanguageHandlers().get(Client.APPLICATION_BINARY);
+                LanguageHandler languageHandler = registry.getLanguageHandlers().get(Client.LANGUAGE_BINARY);
                 if(languageHandler==null) {
-                    throw new NullPointerException("There is no language handler specified for type: "+Client.APPLICATION_BINARY);
+                    throw new NullPointerException("There is no language handler specified for type: "+Client.LANGUAGE_BINARY);
                 }
                 
                 Object object = languageHandler.deserializeObject(content, null);

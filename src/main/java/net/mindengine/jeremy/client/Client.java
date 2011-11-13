@@ -45,8 +45,8 @@ import javax.net.ssl.X509TrustManager;
 public class Client {
     
     private int maxBufferSize = 1024;
-    public static final String APPLICATION_BINARY = "application/binary".intern();
-    public static final String APPLICATION_JSON = "application/json".intern();
+    public static final String LANGUAGE_BINARY = "binary".intern();
+    public static final String LANGUAGE_JSON = "json".intern();
     public static final String LANGUAGE_HEADER = "x-language".intern();
     public static final String ERROR_TYPE_HEADER = "x-error-type".intern();
     /**
@@ -136,7 +136,7 @@ public class Client {
         
         String responseLanguage = connection.getHeaderField(Client.LANGUAGE_HEADER);
         
-        if(APPLICATION_BINARY.equals(responseLanguage)) {
+        if(LANGUAGE_BINARY.equals(responseLanguage)) {
             // Reading binary response
             ByteArrayOutputStream bous = new ByteArrayOutputStream();
             byte[] buffer = new byte[1024];

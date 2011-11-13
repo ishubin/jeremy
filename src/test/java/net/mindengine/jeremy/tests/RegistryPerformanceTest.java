@@ -68,8 +68,8 @@ public class RegistryPerformanceTest {
         
         registryStarter = new RegistryStarter();
         Registry registry = new Registry();
-        registry.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
-        registry.setDefaultLanguage(Client.APPLICATION_JSON);
+        registry.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
+        registry.setDefaultLanguage(Client.LANGUAGE_JSON);
         registry.setPort(8086);
         
         remoteObject = new PerformanceObject();
@@ -80,9 +80,9 @@ public class RegistryPerformanceTest {
         Thread.sleep(2000);
         
         lookup = new Lookup(url);
-        lookup.setDefaultLanguage(Client.APPLICATION_JSON);
-        lookup.addLanguageHandler(Client.APPLICATION_BINARY, new DefaultBinaryLanguageHandler());
-        lookup.addLanguageHandler(Client.APPLICATION_JSON, new DefaultJsonLanguageHandler());
+        lookup.setDefaultLanguage(Client.LANGUAGE_JSON);
+        lookup.addLanguageHandler(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
+        lookup.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
     }
     
     @AfterClass
