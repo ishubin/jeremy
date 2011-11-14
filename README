@@ -15,4 +15,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
    
 
+"Jeremy" is an open HTTP implementation of Remote Method Invocation (RMI). 
+It allows to provide an open client-server communication via HTTP. It also gives the basic information about remote objects registered in Jeremy server.
+"Jeremy" is based on Jetty so it works as webserver. You can access it in different ways:
+
+    - GET "http://<host>:<port>/~" - prints names of all remote objects registered in "Jeremy" server
+    - GET "http://<host>:<port>/object1/~" - prints names of all remote methods of remote object with "object1" name
+    - GET "http://<host>:<port>/object1/method1~" - prints array of method arguments structures, so user will be able to provide proper argument values along with remote method invocation
+    - POST "http://<host>:<port>/~bin" - uploads binary objects to a server cache. As a response "Jeremy" server will print the object key with which it can be identified later.
+    - POST "http://<host>:<port>/object1/method1" - invokes remote method "method1" of remote object with name "object1". All arguments should be posted with name "arg<argument number>" (e.g. "arg0"). Argument number should start from 0. In case if argument is a binary object or contains binary fields it should be specified as "~<cache_key>" - where "cache_key" is a key of binary object in cache obtained after uploading it to a server.
 
