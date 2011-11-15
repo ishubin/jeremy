@@ -86,7 +86,14 @@ public class Registry {
         server.start();
         server.join();
     }
-
+    
+    public boolean isRunning() {
+        if(server!=null) {
+            return server.isRunning();
+        }
+        return false;
+    }
+    
     public void stop() throws Exception {
         server.stop();
     }
