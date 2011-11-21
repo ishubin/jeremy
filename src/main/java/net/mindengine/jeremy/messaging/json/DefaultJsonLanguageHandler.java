@@ -24,6 +24,7 @@ import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.SerializationException;
 import net.mindengine.jeremy.messaging.LanguageHandler;
 
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class DefaultJsonLanguageHandler implements LanguageHandler {
@@ -54,6 +55,7 @@ public class DefaultJsonLanguageHandler implements LanguageHandler {
     @Override
     public Object deserializeObject(String serializedString, Class<?>type) throws DeserializationException {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
             return mapper.readValue(serializedString,type);
         } catch (Exception e) {
