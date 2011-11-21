@@ -43,6 +43,9 @@ import net.mindengine.jeremy.objects.MyAnotherRemoteInterface;
 import net.mindengine.jeremy.objects.MyObject;
 import net.mindengine.jeremy.objects.MyRemoteInterface;
 import net.mindengine.jeremy.objects.SerialObject;
+import net.mindengine.jeremy.objects.SuperSample;
+import net.mindengine.jeremy.objects.SuperSampleA;
+import net.mindengine.jeremy.objects.SuperSampleB;
 import net.mindengine.jeremy.registry.Lookup;
 import net.mindengine.jeremy.registry.Registry;
 import net.mindengine.jeremy.registry.RemoteMethodMetadata;
@@ -125,7 +128,8 @@ public class RegistryIntegrationTest {
         ObjectMapper mapper = new ObjectMapper();
         String[] objects = mapper.readValue(response.getContent(), String[].class);
         assertNotNull(objects);
-        assertEquals(9, objects.length);
+        assertEquals(10, objects.length);
+        assertContains(objects, "sendSample");
         assertContains(objects, "getName");
         assertContains(objects, "getId");
         assertContains(objects, "setName");
@@ -195,6 +199,29 @@ public class RegistryIntegrationTest {
         //Checking that the previous method was implemented properly 
         String name = remoteInterface.getName();
         assertEquals("qwe", name);
+    }
+    
+    @Test
+    public void shouldSendReceiveObjectViaSuperclasses() throws RemoteObjectIsNotFoundException, ConnectionError {
+        MyRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyRemoteInterface.class);
+        
+        SuperSampleA sample1 = new SuperSampleA();
+        sample1.setName("test name");
+        sample1.setA("a");
+        
+        SuperSample response1 = remoteInterface.sendSample(sample1);
+        assertTrue(response1 instanceof SuperSampleA);
+        assertEquals("test name", ((SuperSampleA)response1).getName());
+        assertEquals("a", ((SuperSampleA)response1).getA());
+        
+        SuperSample sample2 = new SuperSampleB();
+        ((SuperSampleB)sample2).setName("test name 2");
+        ((SuperSampleB)sample2).setB("b");
+        
+        SuperSample response2 = remoteInterface.sendSample(sample2);
+        assertTrue(response2 instanceof SuperSampleB);
+        assertEquals("test name 2", ((SuperSampleB)response2).getName());
+        assertEquals("b", ((SuperSampleB)response2).getB());
     }
     
     @Test

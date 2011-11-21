@@ -68,6 +68,8 @@ public class ObjectInvocationHandler implements InvocationHandler {
         int i = 0;
         Map<String, String> params = new HashMap<String, String>();
         LanguageHandler languageHandler = lookup.getLanguageHandler(lookup.getDefaultLanguage());
+        Map<String, String> headers = generateHttpHeaders();
+        
         if (args != null) {
             for (Object argument : args) {
 
@@ -83,33 +85,42 @@ public class ObjectInvocationHandler implements InvocationHandler {
                             throw new ConnectionError("Cannot find key for the uploaded binary object");
                         }
                         params.put("arg"+i, "~"+key);
+                        headers.put(Client.CLASS_PATH+"-"+i, argument.getClass().getName());
                     }
                     else throw new ConnectionError("Cannot upload binary object for remote method argument");
-                    
                 } else {
                     params.put("arg" + i, languageHandler.serializeResponse(argument));
+                    if(argument!=null) {
+                        headers.put(Client.CLASS_PATH+"-"+i, argument.getClass().getName());
+                    }
                 }
                 i++;
             }
         }
 
-        HttpResponse response = client.postRequest(fullUrl, params, generateHttpHeaders());
+        HttpResponse response = client.postRequest(fullUrl, params, headers);
         
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
                 
+                String returnedClassName = response.getHeaders().get(Client.CLASS_PATH);
+                Class<?> returnedClass = method.getReturnType();
+                if(returnedClassName!=null) {
+                    returnedClass = Class.forName(returnedClassName);
+                }
+                
                 LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
                 if(response.getBytes()!=null) {
-                    return returnLanguageHandler.deserializeObject(response.getBytes(), method.getReturnType());
+                    return returnLanguageHandler.deserializeObject(response.getBytes(), returnedClass);
                 }
-                else return returnLanguageHandler.deserializeObject(response.getContent(), method.getReturnType());
+                else return returnLanguageHandler.deserializeObject(response.getContent(), returnedClass);
             } else
                 return null;
         } 
         else {
             //Trying to deserialize exception
             
-            String errorClassName = response.getHeaders().get(Client.ERROR_TYPE_HEADER);
+            String errorClassName = response.getHeaders().get(Client.CLASS_PATH);
             if(errorClassName!=null) {
                 LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
                 

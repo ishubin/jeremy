@@ -28,4 +28,6 @@ public interface MyRemoteInterface extends Remote {
     public void setSerialObject(SerialObject serialObject);
     
     public void someTestMethod();
+    
+    public SuperSample sendSample(SuperSample sample);
 }

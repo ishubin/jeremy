@@ -96,7 +96,7 @@ public class RegistryServlet extends HttpServlet {
         }
         catch (Throwable e) {
             output = e;
-            response.addHeader(Client.ERROR_TYPE_HEADER, e.getClass().getName());
+            response.addHeader(Client.CLASS_PATH, e.getClass().getName());
             e.printStackTrace();
         }
         
@@ -123,6 +123,10 @@ public class RegistryServlet extends HttpServlet {
         
         byte[] bytes = languageHandler.serializeResponseToBytes(object);
         response.addHeader(Client.LANGUAGE_HEADER, Client.LANGUAGE_BINARY);
+        
+        if(object!=null) {
+            response.addHeader(Client.CLASS_PATH, object.getClass().getName());
+        }
         OutputStream os = response.getOutputStream();
         os.write(bytes);
         os.close();
@@ -135,6 +139,9 @@ public class RegistryServlet extends HttpServlet {
         //Will use the same language in response as in request
         LanguageHandler languageHandler = registry.getLanguageHandler(request.getHeader(Client.LANGUAGE_HEADER));
         
+        if(output!=null) {
+            response.addHeader(Client.CLASS_PATH, output.getClass().getName());
+        }
         
         String body = languageHandler.serializeResponse(output);
         if(output instanceof Throwable) {
@@ -184,7 +191,13 @@ public class RegistryServlet extends HttpServlet {
                     }
                     else {
                         LanguageHandler languageHandler = registry.getLanguageHandler(request.getHeader(Client.LANGUAGE_HEADER));
-                        arguments[i] = languageHandler.deserializeObject(parameter, parameterTypes[i]);
+                        
+                        Class<?> parameterClass = parameterTypes[i];
+                        String parameterClassName = request.getHeader(Client.CLASS_PATH+"-"+i);
+                        if(parameterClassName!=null) {
+                            parameterClass = Class.forName(parameterClassName);
+                        }
+                        arguments[i] = languageHandler.deserializeObject(parameter, parameterClass);
                     }
                 }
                 else arguments[i] = null;

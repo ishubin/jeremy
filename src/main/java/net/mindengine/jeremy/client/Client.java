@@ -48,7 +48,7 @@ public class Client {
     public static final String LANGUAGE_BINARY = "binary".intern();
     public static final String LANGUAGE_JSON = "json".intern();
     public static final String LANGUAGE_HEADER = "x-language".intern();
-    public static final String ERROR_TYPE_HEADER = "x-error-type".intern();
+    public static final String CLASS_PATH = "x-class-path".intern();
     /**
      * Send GET or POST request
      * @param targetUrl

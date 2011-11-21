@@ -72,4 +72,9 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
     public void someTestMethod() {
         throw new NullPointerException("Some test message");
     }
+    
+    @Override
+    public SuperSample sendSample(SuperSample sample) {
+        return sample;
+    }
 }

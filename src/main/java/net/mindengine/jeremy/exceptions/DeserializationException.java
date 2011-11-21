@@ -21,6 +21,8 @@ public class DeserializationException extends Exception {
      * 
      */
     private static final long serialVersionUID = 7994993280798284105L;
+    
+    private String content;
 
     public DeserializationException() {
         super();
@@ -36,6 +38,14 @@ public class DeserializationException extends Exception {
 
     public DeserializationException(Throwable arg0) {
         super(arg0);
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getContent() {
+        return content;
     }
 
     

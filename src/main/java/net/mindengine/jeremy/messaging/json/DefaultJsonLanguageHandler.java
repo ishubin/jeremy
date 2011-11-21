@@ -59,7 +59,9 @@ public class DefaultJsonLanguageHandler implements LanguageHandler {
         try {
             return mapper.readValue(serializedString,type);
         } catch (Exception e) {
-            throw new DeserializationException(e);
+            DeserializationException de = new DeserializationException(e);
+            de.setContent(serializedString);
+            throw de;
         }
     }
 
