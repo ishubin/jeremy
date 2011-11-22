@@ -100,6 +100,8 @@ public class ObjectInvocationHandler implements InvocationHandler {
 
         HttpResponse response = client.postRequest(fullUrl, params, headers);
         
+        
+        
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
                 
