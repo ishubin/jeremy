@@ -66,8 +66,6 @@ public class RegistryServlet extends HttpServlet {
             uri = uri.substring(0, uri.length()-1);
         }
         
-        request.getMethod();
-        
         Object output = null;
         try {
             if(uri.endsWith("~")) {

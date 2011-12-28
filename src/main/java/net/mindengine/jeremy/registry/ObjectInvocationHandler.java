@@ -78,7 +78,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     //Serializing argument to binary data
                     byte[]bytes = lookup.getLanguageHandler(Client.LANGUAGE_BINARY).serializeResponseToBytes(argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders(Client.LANGUAGE_BINARY));
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders(lookup.getDefaultLanguage()));
                     if(response.getStatus()<400) {
                         Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
