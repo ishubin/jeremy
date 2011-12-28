@@ -14,6 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 package net.mindengine.jeremy.registry;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -44,6 +45,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.FileUtils;
 
 
 public class RegistryServlet extends HttpServlet {
@@ -131,6 +133,7 @@ public class RegistryServlet extends HttpServlet {
         os.write(bytes);
         os.close();
         os.flush();
+        
     }
     
     private void printObjectToResponse(Object output, HttpServletRequest request, HttpServletResponse response) throws SerializationException, IOException {

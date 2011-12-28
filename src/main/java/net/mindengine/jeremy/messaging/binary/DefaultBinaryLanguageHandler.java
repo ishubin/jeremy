@@ -17,8 +17,11 @@ package net.mindengine.jeremy.messaging.binary;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
+import org.apache.commons.io.FileUtils;
 
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.exceptions.DeserializationException;
@@ -56,8 +59,11 @@ public class DefaultBinaryLanguageHandler implements LanguageHandler {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
             ObjectOutputStream oos = new ObjectOutputStream(bos) ;
+            
             oos.writeObject(object);
             oos.close();
+            
+            
             return bos.toByteArray();
         }
         catch (Exception e) {

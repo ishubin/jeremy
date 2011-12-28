@@ -101,13 +101,13 @@ public class Registry {
     }
     
     /**
-     * Returns either language-handler for specified contentType either default language-handler 
-     * @param contentType
+     * Returns either language-handler for specified language either default language-handler 
+     * @param language
      * @return
      */
-    public LanguageHandler getLanguageHandler(String contentType) {
-        if(contentType!=null && languageHandlers.containsKey(contentType)) {
-            return languageHandlers.get(contentType);
+    public LanguageHandler getLanguageHandler(String language) {
+        if(language!=null && languageHandlers.containsKey(language)) {
+            return languageHandlers.get(language);
         }
         else return languageHandlers.get(defaultLanguage);
     }

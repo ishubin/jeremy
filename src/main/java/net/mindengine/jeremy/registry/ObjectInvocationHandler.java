@@ -47,9 +47,9 @@ public class ObjectInvocationHandler implements InvocationHandler {
         return object;
     }
     
-    public Map<String, String> generateHttpHeaders() {
+    public Map<String, String> generateHttpHeaders(String languageHandler) {
         Map<String, String> headers = new HashMap<String, String>();
-        headers.put(Client.LANGUAGE_HEADER, lookup.getDefaultLanguage());
+        headers.put(Client.LANGUAGE_HEADER, languageHandler);
         return headers;
     }
     
@@ -67,8 +67,9 @@ public class ObjectInvocationHandler implements InvocationHandler {
         // Serializing remote method arguments
         int i = 0;
         Map<String, String> params = new HashMap<String, String>();
+        
         LanguageHandler languageHandler = lookup.getLanguageHandler(lookup.getDefaultLanguage());
-        Map<String, String> headers = generateHttpHeaders();
+        Map<String, String> headers = generateHttpHeaders(lookup.getDefaultLanguage());
         
         if (args != null) {
             for (Object argument : args) {
@@ -77,7 +78,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     //Serializing argument to binary data
                     byte[]bytes = lookup.getLanguageHandler(Client.LANGUAGE_BINARY).serializeResponseToBytes(argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders());
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders(Client.LANGUAGE_BINARY));
                     if(response.getStatus()<400) {
                         Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
@@ -99,8 +100,6 @@ public class ObjectInvocationHandler implements InvocationHandler {
         }
 
         HttpResponse response = client.postRequest(fullUrl, params, headers);
-        
-        
         
         if (response.getStatus() < 400) {
             if (!method.getReturnType().equals(Void.TYPE)) {
