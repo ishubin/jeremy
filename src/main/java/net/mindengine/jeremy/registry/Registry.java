@@ -37,7 +37,8 @@ import org.mortbay.jetty.servlet.ServletHolder;
 
 public class Registry {
 
-    //TODO Jeremy should write classpath to HttpHeaders so it would be easier to deserialize objects
+    //TODO Provide authorization layer using "x-token" header
+    
     
     private Server server;
     private Map<String, RemoteObject> remoteObjects = new ConcurrentHashMap<String, RemoteObject>();
