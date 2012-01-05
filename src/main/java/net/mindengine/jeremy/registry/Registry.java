@@ -29,11 +29,14 @@ import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.messaging.LanguageHandler;
 import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
 
-import org.mortbay.jetty.Connector;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
 
 public class Registry {
 
@@ -72,7 +75,7 @@ public class Registry {
 
         server.addConnector(connector);
 
-        Context context = new Context();
+        ServletContextHandler context = new ServletContextHandler();
         ServletHolder holder = new ServletHolder();
         servlet = new RegistryServlet();
         servlet.setRegistry(this);
@@ -84,8 +87,9 @@ public class Registry {
         holder.setServlet(servlet);
         context.addServlet(holder, "/*");
         
-        server.addHandler(context);
-
+        HandlerList handlers = new HandlerList();
+        handlers.setHandlers(new Handler[] { context});
+        server.setHandler(context);
         server.start();
         server.join();
     }
