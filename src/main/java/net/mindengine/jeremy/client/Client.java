@@ -15,12 +15,10 @@
  ******************************************************************************/
 package net.mindengine.jeremy.client;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -41,11 +39,12 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.io.IOUtils;
+
 
 public class Client {
     
     private int maxBufferSize = 1024;
-    public static final String LANGUAGE_BINARY = "binary".intern();
     public static final String LANGUAGE_JSON = "json".intern();
     public static final String LANGUAGE_HEADER = "x-language".intern();
     public static final String CLASS_PATH = "x-class-path".intern();
@@ -133,33 +132,10 @@ public class Client {
         response.setHeaders(collectResponseHeaders(connection));
         response.setLanguage(response.getHeaders().get(Client.LANGUAGE_HEADER));
         
-        
-        String responseLanguage = connection.getHeaderField(Client.LANGUAGE_HEADER);
-        
-        if(LANGUAGE_BINARY.equals(responseLanguage)) {
-            // Reading binary response
-            ByteArrayOutputStream bous = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int len1 = 0;
-            while ( (len1 = is.read(buffer)) > 0 ) {
-                bous.write(buffer,0, len1);
-            }
-            bous.close();
-            response.setBytes(bous.toByteArray());
-        }
-        else {
-            // Reading text response
-            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-            String line;
-            StringBuffer buff = new StringBuffer();
-            while ((line = rd.readLine()) != null) {
-                buff.append(line);
-                buff.append('\r');
-            }
-            rd.close();
-            response.setContent(buff.toString());
-        }
-
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copy(is, baos);
+        response.setBytes(baos.toByteArray());
+    
         return response;
     }
     
@@ -244,17 +220,12 @@ public class Client {
         else {
             is = connection.getInputStream();
         }
-        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-        String line;
-        StringBuffer buff = new StringBuffer();
-        while ((line = rd.readLine()) != null) {
-            buff.append(line);
-            buff.append('\r');
-        }
-        rd.close();
-
         HttpResponse response = new HttpResponse();
-        response.setContent(buff.toString());
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copy(is, baos);
+        response.setBytes(baos.toByteArray());
+        
         response.setStatus(connection.getResponseCode());
         response.setHeaders(collectResponseHeaders(connection));
         response.setLanguage(response.getHeaders().get(Client.LANGUAGE_HEADER));

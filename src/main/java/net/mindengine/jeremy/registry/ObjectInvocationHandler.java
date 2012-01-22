@@ -16,13 +16,16 @@
 package net.mindengine.jeremy.registry;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-import net.mindengine.jeremy.bin.Binary;
+import org.apache.commons.io.FileUtils;
+
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
@@ -74,16 +77,16 @@ public class ObjectInvocationHandler implements InvocationHandler {
         if (args != null) {
             for (Object argument : args) {
 
-                if (argument != null && Binary.class.isAssignableFrom(argument.getClass())) {
+                if (argument != null && argument instanceof File) {
                     //Serializing argument to binary data
-                    byte[]bytes = lookup.getLanguageHandler(Client.LANGUAGE_BINARY).serializeResponseToBytes(argument);
+                    byte[] bytes = FileUtils.readFileToByteArray((File)argument);
                     
-                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~bin", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders(lookup.getDefaultLanguage()));
+                    HttpResponse response = client.sendMultiPartBinaryRequest(url+"/~file", "argument"+i, new ByteArrayInputStream(bytes), generateHttpHeaders(lookup.getDefaultLanguage()));
                     if(response.getStatus()<400) {
-                        Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getContent(), new HashMap<String, String>().getClass());
+                        Map<String, String> map = (Map<String, String>) languageHandler.deserializeObject(response.getBytes(), new HashMap<String, String>().getClass());
                         String key = map.get("argument"+i);
                         if(key==null) {
-                            throw new ConnectionError("Cannot find key for the uploaded binary object");
+                            throw new ConnectionError("Cannot find key for the uploaded file");
                         }
                         params.put("arg"+i, "~"+key);
                         headers.put(Client.CLASS_PATH+"-"+i, argument.getClass().getName());
@@ -110,11 +113,17 @@ public class ObjectInvocationHandler implements InvocationHandler {
                     returnedClass = Class.forName(returnedClassName);
                 }
                 
-                LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
-                if(response.getBytes()!=null) {
+                if(returnedClass.equals(File.class)) {
+                    //Saving response to temp file
+                    String fileName = UUID.randomUUID().toString().replace("-", "");
+                    File tmpFile = File.createTempFile(fileName, ".tmp");
+                    FileUtils.writeByteArrayToFile(tmpFile, response.getBytes());
+                    return tmpFile;
+                }
+                else {
+                    LanguageHandler returnLanguageHandler = lookup.getLanguageHandler(response.getLanguage());
                     return returnLanguageHandler.deserializeObject(response.getBytes(), returnedClass);
                 }
-                else return returnLanguageHandler.deserializeObject(response.getContent(), returnedClass);
             } else
                 return null;
         } 
@@ -128,10 +137,7 @@ public class ObjectInvocationHandler implements InvocationHandler {
                 Class<?>errorClass = Class.forName(errorClassName);
                 
                 Throwable throwable = null;
-                if(response.getBytes()!=null) {
-                    throwable = (Throwable) returnLanguageHandler.deserializeObject(response.getBytes(), errorClass);
-                }
-                else throwable = (Throwable) returnLanguageHandler.deserializeObject(response.getContent(), errorClass);
+                throwable = (Throwable) returnLanguageHandler.deserializeObject(response.getBytes(), errorClass);
                 throw throwable;
             }
             else throw new RuntimeException("Cannot process remote error");

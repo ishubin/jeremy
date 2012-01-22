@@ -32,12 +32,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.mindengine.jeremy.bin.RemoteFile;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.client.HttpResponse;
 import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
-import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
 import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
 import net.mindengine.jeremy.objects.MyAnotherRemoteInterface;
 import net.mindengine.jeremy.objects.MyObject;
@@ -51,6 +49,7 @@ import net.mindengine.jeremy.registry.Registry;
 import net.mindengine.jeremy.registry.RemoteMethodMetadata;
 import net.mindengine.jeremy.starter.RegistryStarter;
 
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -84,7 +83,6 @@ public class RegistryIntegrationTest {
         
         lookup = new Lookup(url);
         lookup.setDefaultLanguage(Client.LANGUAGE_JSON);
-        lookup.addLanguageHandler(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
         lookup.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
     }
     
@@ -105,7 +103,7 @@ public class RegistryIntegrationTest {
         
         
         ObjectMapper mapper = new ObjectMapper();
-        String[] objects = mapper.readValue(response.getContent(), String[].class);
+        String[] objects = mapper.readValue(response.getBytes(), String[].class);
         assertNotNull(objects);
         assertEquals(2, objects.length);
         assertContains(objects, "myObject");
@@ -126,7 +124,7 @@ public class RegistryIntegrationTest {
         
         
         ObjectMapper mapper = new ObjectMapper();
-        String[] objects = mapper.readValue(response.getContent(), String[].class);
+        String[] objects = mapper.readValue(response.getBytes(), String[].class);
         assertNotNull(objects);
         assertEquals(10, objects.length);
         assertContains(objects, "sendSample");
@@ -151,7 +149,7 @@ public class RegistryIntegrationTest {
         assertEquals(200, response.getStatus());
         
         ObjectMapper mapper = new ObjectMapper();
-        RemoteMethodMetadata md = mapper.readValue(response.getContent(), RemoteMethodMetadata.class);
+        RemoteMethodMetadata md = mapper.readValue(response.getBytes(), RemoteMethodMetadata.class);
         assertNotNull(md);
         assertEquals(1, md.getArguments().size());
         assertNull(md.getArguments().get(0).getFields());
@@ -165,7 +163,7 @@ public class RegistryIntegrationTest {
     @SuppressWarnings("unchecked")
     public void uploadFileShouldReturnIdOfObjectsInCache() throws URISyntaxException, KeyManagementException, NoSuchAlgorithmException, IOException {
         Client client = new Client();
-        RemoteFile remoteFile = new RemoteFile(new File(getClass().getResource("/test-file.png").toURI()));
+        File remoteFile = new File(getClass().getResource("/test-file.png").toURI());
         
         ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
         ObjectOutputStream out = new ObjectOutputStream(bos) ;
@@ -174,9 +172,9 @@ public class RegistryIntegrationTest {
         
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(Client.LANGUAGE_HEADER, Client.LANGUAGE_JSON);
-        HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~bin", "myCustomParamName", new ByteArrayInputStream(bos.toByteArray()), headers);
+        HttpResponse response = client.sendMultiPartBinaryRequest("http://localhost:8085/~file", "myCustomParamName", new ByteArrayInputStream(bos.toByteArray()), headers);
         ObjectMapper mapper = new ObjectMapper();
-        String content = response.getContent();
+        String content = new String(response.getBytes());
         
         assertEquals(200, response.getStatus());
         Map<String, String> map = (Map<String, String>) mapper.readValue(content, new HashMap<String, String>().getClass());
@@ -270,21 +268,21 @@ public class RegistryIntegrationTest {
         MyAnotherRemoteInterface remoteInterface = lookup.getRemoteObject("myObject", MyAnotherRemoteInterface.class);
         
         //Invoking remote method.
-        RemoteFile file = new RemoteFile(new File(getClass().getResource("/test-file.png").toURI()));
-        
-        assertNotNull(file.getBytes());
-        assertTrue(file.getBytes().length>0);
-        
+        File file = new File(getClass().getResource("/test-file.png").toURI());
+        byte bytesBefore[] = FileUtils.readFileToByteArray(file);
+        String pathBefore = file.getAbsolutePath();
         remoteInterface.uploadFile(file);
         
-        RemoteFile file2 = remoteInterface.downloadFile();
+        File file2 = remoteInterface.downloadFile();
+        byte bytesAfter[] = FileUtils.readFileToByteArray(file);
+        
         assertNotNull(file2);
-        assertNotNull(file2.getBytes());
+        assertTrue(!pathBefore.equals(file2.getAbsoluteFile()));
         
-        assertEquals(file.getBytes().length, file2.getBytes().length);
+        assertEquals(bytesBefore.length, bytesAfter.length);
         
-        for(int i=0;i<file.getBytes().length; i++) {
-            assertEquals(file.getBytes()[i], file2.getBytes()[i]);
+        for(int i=0;i<bytesBefore.length; i++) {
+            assertEquals(bytesBefore[i], bytesAfter[i]);
         }
     }
     

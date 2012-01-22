@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,7 +34,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.mindengine.jeremy.bin.Binary;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.exceptions.DeserializationException;
 import net.mindengine.jeremy.exceptions.RemoteMethodIsNotFoundException;
@@ -79,8 +79,8 @@ public class RegistryServlet extends HttpServlet {
                     output = getListOfAllObjects();
                 }
             }
-            else if (uri.equals("/~bin")) {
-                output = uploadBinaryObject(request);
+            else if (uri.equals("/~file")) {
+                output = uploadBinaryFile(request);
             }
             else if(uri.matches("/.*/.*")) {
               output = invokeRemoteMethod(uri, request);
@@ -101,8 +101,8 @@ public class RegistryServlet extends HttpServlet {
         }
         
         try {
-            if(output!=null && Binary.class.isAssignableFrom(output.getClass())){
-                printBinaryObjectToResponse(output, response);
+            if(output!=null && output instanceof File){
+                printFileToResponse((File)output, response);
             }
             else {
                 printObjectToResponse(output, request, response);
@@ -118,16 +118,13 @@ public class RegistryServlet extends HttpServlet {
     
     
     
-    private void printBinaryObjectToResponse(Object object, HttpServletResponse response) throws IOException, SerializationException {
-        LanguageHandler languageHandler = registry.getLanguageHandler(Client.LANGUAGE_BINARY);
-        
-        byte[] bytes = languageHandler.serializeResponseToBytes(object);
-        response.addHeader(Client.LANGUAGE_HEADER, Client.LANGUAGE_BINARY);
-        
-        if(object!=null) {
-            response.addHeader(Client.CLASS_PATH, object.getClass().getName());
+    private void printFileToResponse(File file, HttpServletResponse response) throws IOException, SerializationException {
+        if(file!=null) {
+            response.addHeader(Client.CLASS_PATH, file.getClass().getName());
         }
+        
         OutputStream os = response.getOutputStream();
+        byte[] bytes = FileUtils.readFileToByteArray(file);
         os.write(bytes);
         os.close();
         os.flush();
@@ -215,7 +212,7 @@ public class RegistryServlet extends HttpServlet {
 
 
     @SuppressWarnings("unchecked")
-    private Map<String, String> uploadBinaryObject(HttpServletRequest request) throws FileUploadException, DeserializationException {
+    private Map<String, String> uploadBinaryFile(HttpServletRequest request) throws FileUploadException, DeserializationException, IOException {
         ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
         List<FileItem> files = upload.parseRequest(request);
         
@@ -225,15 +222,12 @@ public class RegistryServlet extends HttpServlet {
                 byte[] content = fileItem.get();
                 
                 //Looking for binary language-handler in registry
-                LanguageHandler languageHandler = registry.getLanguageHandlers().get(Client.LANGUAGE_BINARY);
-                if(languageHandler==null) {
-                    throw new NullPointerException("There is no language handler specified for type: "+Client.LANGUAGE_BINARY);
-                }
                 
-                Object object = languageHandler.deserializeObject(content, null);
+                String fileName = UUID.randomUUID().toString().replace("-", "");
+                File file = File.createTempFile(fileName, ".tmp");
+                FileUtils.writeByteArrayToFile(file, content);
                 
-                //Putting object to cache so it will be used later
-                String id = registry.getObjectCache().cacheObject(object);
+                String id = registry.getObjectCache().cacheObject(file);
                 cachedObjects.put(fileItem.getFieldName(), id);
             }
             return cachedObjects;

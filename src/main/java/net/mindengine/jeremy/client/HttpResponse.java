@@ -21,17 +21,11 @@ public class HttpResponse {
     
     private String url;
     private int status;
-    private String content;
     private String language;
     private Map<String, String> headers;
     
     private byte[] bytes;
-    public void setContent(String content) {
-        this.content = content;
-    }
-    public String getContent() {
-        return content;
-    }
+    
     public void setStatus(int status) {
         this.status = status;
     }

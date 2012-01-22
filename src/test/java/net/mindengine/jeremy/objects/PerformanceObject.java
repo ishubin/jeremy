@@ -15,7 +15,8 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
-import net.mindengine.jeremy.bin.RemoteFile;
+import java.io.File;
+
 
 public class PerformanceObject implements PerformanceObjectInterface{
 
@@ -29,8 +30,7 @@ public class PerformanceObject implements PerformanceObjectInterface{
     }
 
     @Override
-    public void executeMethodWithBinaries(RemoteFile file) throws InterruptedException {
-        if(file.getBytes()==null) throw new NullPointerException("Bytes are null");
+    public void executeMethodWithBinaries(File file) throws InterruptedException {
         Thread.sleep(5000);
         executeMethodWithBinaries++;
     }

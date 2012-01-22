@@ -15,13 +15,12 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
+import java.io.File;
 import java.rmi.Remote;
-
-import net.mindengine.jeremy.bin.RemoteFile;
 
 public interface PerformanceObjectInterface extends Remote {
 
     public void executeSimpleMethod() throws InterruptedException;
     
-    public void executeMethodWithBinaries(RemoteFile file) throws InterruptedException;
+    public void executeMethodWithBinaries(File file) throws InterruptedException;
 }

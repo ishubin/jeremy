@@ -27,7 +27,7 @@ import net.mindengine.jeremy.cache.Cache;
 import net.mindengine.jeremy.cache.DefaultCache;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.messaging.LanguageHandler;
-import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
+import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
@@ -55,7 +55,7 @@ public class Registry {
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
     
     
-    private String defaultLanguage = Client.LANGUAGE_BINARY;
+    private String defaultLanguage = Client.LANGUAGE_JSON;
     
     public void addLanguageHandler(String language, LanguageHandler languageHandler) {
         this.languageHandlers.put(language, languageHandler);
@@ -80,8 +80,8 @@ public class Registry {
         servlet = new RegistryServlet();
         servlet.setRegistry(this);
         
-        if(!getLanguageHandlers().containsKey(Client.LANGUAGE_BINARY)) {
-            getLanguageHandlers().put(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
+        if(!getLanguageHandlers().containsKey(Client.LANGUAGE_JSON)) {
+            getLanguageHandlers().put(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
         }
         
         holder.setServlet(servlet);

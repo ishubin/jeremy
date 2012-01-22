@@ -33,7 +33,7 @@ public class Lookup {
     private String url;
     private Client client;
     private Map<String, LanguageHandler> languageHandlers = new HashMap<String, LanguageHandler>();
-    private String defaultLanguage = Client.LANGUAGE_BINARY;
+    private String defaultLanguage = Client.LANGUAGE_JSON;
     private Map<String, Map<Class<?>, Object>> cashedRemoteObjects = new HashMap<String, Map<Class<?>, Object>>();
     
     public Lookup() {
@@ -110,7 +110,7 @@ public class Lookup {
             HttpResponse httpResponse  = client.getRequest(url+"/"+objectName+"/~", null, generateHttpHeaders());
             if(httpResponse.getStatus()<=300) {
                 
-                String[] remoteMethods = (String[]) languageHandler.deserializeObject(httpResponse.getContent(), String[].class);
+                String[] remoteMethods = (String[]) languageHandler.deserializeObject(httpResponse.getBytes(), String[].class);
                 
                 Method[] declaredMethods = interfaceClass.getMethods();
                 for(Method method : declaredMethods) {
@@ -135,7 +135,7 @@ public class Lookup {
             else if(httpResponse.getStatus()==404) {
                 throw new RemoteObjectIsNotFoundException("There is no remote object with name '"+objectName+"'");
             }
-            else throw new ConnectionError(httpResponse.getContent());
+            else throw new ConnectionError(new String(httpResponse.getBytes()));
         } 
         catch (Exception e) {
             throw new ConnectionError("Cannot reach remote server", e);

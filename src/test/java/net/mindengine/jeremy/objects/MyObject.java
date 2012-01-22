@@ -15,7 +15,7 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
-import net.mindengine.jeremy.bin.RemoteFile;
+import java.io.File;
 
 
 public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
@@ -23,8 +23,7 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
     private Long id = 1L;
     private String name = "name";
     private SerialObject serialObject;
-    private RemoteFile file;
-    
+    private File file;
     
     
     @Override
@@ -59,12 +58,12 @@ public class MyObject implements MyAnotherRemoteInterface, MyRemoteInterface{
     }
 
     @Override
-    public void uploadFile(RemoteFile file) {
+    public void uploadFile(File file) {
         this.file = file;
     }
 
     @Override
-    public RemoteFile downloadFile() {
+    public File downloadFile() {
         return this.file;
     }
     

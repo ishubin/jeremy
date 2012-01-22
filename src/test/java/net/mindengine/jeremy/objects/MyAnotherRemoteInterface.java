@@ -15,9 +15,8 @@
  ******************************************************************************/
 package net.mindengine.jeremy.objects;
 
+import java.io.File;
 import java.rmi.Remote;
-
-import net.mindengine.jeremy.bin.RemoteFile;
 
 public interface MyAnotherRemoteInterface extends Remote{
 
@@ -25,7 +24,7 @@ public interface MyAnotherRemoteInterface extends Remote{
     
     public void setLong(Long id); 
     
-    public void uploadFile(RemoteFile file);
+    public void uploadFile(File file);
     
-    public RemoteFile downloadFile();
+    public File downloadFile();
 }

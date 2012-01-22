@@ -26,11 +26,9 @@ import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Properties;
 
-import net.mindengine.jeremy.bin.RemoteFile;
 import net.mindengine.jeremy.client.Client;
 import net.mindengine.jeremy.exceptions.ConnectionError;
 import net.mindengine.jeremy.exceptions.RemoteObjectIsNotFoundException;
-import net.mindengine.jeremy.messaging.binary.DefaultBinaryLanguageHandler;
 import net.mindengine.jeremy.messaging.json.DefaultJsonLanguageHandler;
 import net.mindengine.jeremy.objects.PerformanceObject;
 import net.mindengine.jeremy.objects.PerformanceObjectInterface;
@@ -81,7 +79,6 @@ public class RegistryPerformanceTest {
         
         lookup = new Lookup(url);
         lookup.setDefaultLanguage(Client.LANGUAGE_JSON);
-        lookup.addLanguageHandler(Client.LANGUAGE_BINARY, new DefaultBinaryLanguageHandler());
         lookup.addLanguageHandler(Client.LANGUAGE_JSON, new DefaultJsonLanguageHandler());
     }
     
@@ -180,7 +177,7 @@ public class RegistryPerformanceTest {
         tc.setExecutor(new Executor<PerformanceObjectInterface>() {
             @Override
             public void execute(PerformanceObjectInterface object) throws InterruptedException, IOException, URISyntaxException {
-                object.executeMethodWithBinaries(new RemoteFile(new File(getClass().getResource("/test-file.png").toURI())));
+                object.executeMethodWithBinaries(new File(getClass().getResource("/test-file.png").toURI()));
             }
         });
         
