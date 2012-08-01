@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.mindengine</groupId>
   <artifactId>jeremy</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>Jeremy</name>
   <dependencies>
     <dependency>
@@ -61,6 +61,12 @@
       </plugin>
     </plugins>
   </build>
+  <distributionManagement>
+    <repository>
+      <id>mindengine.local</id>
+      <url>file:///${basedir}/../maven-repo/repository</url>
+    </repository>
+  </distributionManagement>
   <licenses>
     <license>
       <name>Apache 2</name>
